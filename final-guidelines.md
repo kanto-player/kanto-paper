@@ -1,4 +1,5 @@
 Finishing off a class like 4840 is always complicated. Each group needs to do two things: 
+  
   * Wednesday and Thursday, May 15th and 16th: Presentations and Demos 
 	
 	Presentations and demos will be held in the lab, Mudd 1235. 
@@ -7,10 +8,12 @@ Finishing off a class like 4840 is always complicated. Each group needs to do tw
 	Each group will first give a formal presentation on their project. 
 	Every member of each group must give part of the presentation. 
 	I suggest dividing your presentation as follows: 
-		1) an overview of the project and its objectives, 
-		2) a discussion of the architectural and timing design, 
-		3) experiences and issues in implementation (the difficult parts), 
-		4) a summary including lessons learned. 
+	
+	 1. an overview of the project and its objectives, 
+	 2. a discussion of the architectural and timing design, 
+	 3. experiences and issues in implementation (the difficult parts), 
+	 4. a summary including lessons learned. 
+	
 	This is a ten-minute presentation, so each member doesn't need to say much. 
 	Powerpoint or PDF slides are encouraged but not required. Bring them on a 
 	laptop since I won't have a computer for you. Each time slot is actually 
@@ -23,6 +26,7 @@ Finishing off a class like 4840 is always complicated. Each group needs to do tw
   * Thursday, May 16th: Final reports are due at 11:59 PM. 
 	
 	No extensions; I must submit grades on the 17th. Upload three things to Courseworks: 
+
 	 1. a single PDF file of your whole report, including a listing of all 
 		source code. Do remember to include all the sections listed on the 
 		webpage. Do not turn in a paper copy of your report; it will be too big. 
