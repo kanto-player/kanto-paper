@@ -2,6 +2,7 @@
 \usepackage[latin1]{inputenc}
 \usepackage[margin=1.0in]{geometry}
 \usepackage{fancyhdr}
+\usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
 \setcounter{secnumdepth}{2}
@@ -30,7 +31,12 @@ CSEE W4840 Final Report}
 
 \maketitle
 \newpage
-\abstract{This project presents an audio player with frequency visualization. The user is able to play audio files from an SD card and view a nice visualization on a VGA display. We use a field-programmable gate array (FPGA) for implementation, with software handling user interaction and song coordination and hardware handling actual audio output and FFT visualization. }
+
+\abstract{This project presents an audio player with frequency visualization. 
+The user is able to play audio files from an SD card and view a nice visualization 
+on a VGA display. We use a field-programmable gate array (FPGA) for implementation, 
+with software handling user interaction and song coordination and hardware handling 
+actual audio output and FFT visualization. }
 
 \section{Introduction}
 
@@ -39,12 +45,72 @@ CSEE W4840 Final Report}
 \subsection{High-Level Overview}
 % include data path
 % block diagram
-\subsection{Low-Level Implementation Details}
+
+\section{Design Implementation}
 \subsection{FFT Unit}
+The FFT unit is used to compute the discrete frequency transform of a set of audio
+samples to be visualized. 
+
+	\subsubsection{Fast Fourier Transform Algorithm}
+	We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
+	frequency transform of a given sample. The number of frequencies $N$ computed by 
+	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
+	to optimize for 	space and time. The basic DFT is defined by the equation:
+	
+	$$
+	 X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
+	$$ 
+	
+	where $k$ is an integer from 0 to $N$. 
+	
+	According to the Cooley-Tukey algorithm, 
+	we split our original input into 16 different parts and perform a DFT on each
+	individual component. We can then recombine the individual DFT outputs in 4
+	recombination stages, using the following equation for each stage: 
+	$$
+	X_k = \left\{
+	\begin{matrix}
+		E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
+		E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
+		k \geq N/2. 
+	\end{matrix} 
+	\right. 
+	$$
+	
+	The resulting output is 256 frequency values.
+	
+	\subsubsection{Block Diagram}
+	
+% block diagram
+% pipeline diagram
+% timing diagram
+% test benches if available
+
 \subsection{Audio Buffer}
+
 \subsection{Visualizer} There are two main tasks that the vizualizer needs to accomplish.  The first is sequentially reading in the data produced by the FFT and the other is displaying that data on the vga.  Originally all 256 different frequencies were being displayed however after initial designs the decision made was to include data for the first 32 frequencies on the display since these are the hearable frequencies.  The reading process requires two states, a holding state and a reading state.  The transition to reading happens when the FFT sends a "done" signal which means that the data is in place to be read.  For display purposes, the 32 frequencies are placed into 16 bins, 2 per bin, each of which corresponds to one of sixteen bars located horizontally across the screen.  The height of these bars is decided by summing the amplitude of the two frequencies contained in the bin and then scaling this value to the necessary height for the screen.\\An additional functionality that was added was the ability to change color of the bars appearing on the screen.  Three switches correspond to red, green, and blue and allow the user to mix and match to create different colors.  The switches are active low so the default color when all switches are "off" is the white so as to be seen on the black background.
+% block diagram
+% state diagram
+% timing diagram
+% test benches if available
+
 \subsection{SD Card Controller}
+	\subsubsection{SPI Protocol}
+	\subsubsection{Block Diagram}
+	
+
+% block diagram
+% state diagram
+% timing diagram
+% test benches if available
+
 \subsection{Software User Interface}
+
+\subsection{Miscellaneous Controller Components}
+\subsubsection{The Conductor}
+\subsubsection{Phase-Locked Loop for Multiple Clocks}
+The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and \textbf{something} for the audio output. %% NEED AUDIO CLOCK SPEED 44100/s? 
+
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
 \textbf{Milestone} & \textbf{Date} & \textbf{Goal} & \textbf{Accomplished}\\ \hline
@@ -58,7 +124,7 @@ Milestone 2 & Apr 16 & Individual peripherals written in VHDL and test benched.&
 Milestone 3 & Apr 30 & Build interfaces between all peripherals and finish synchronization software. &
 	\textit{Completed}\\
 &&&\\
-Deadline&May 9&System complete and presentation finished.&\textit{Completed.}\\
+Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 &&&\\
 \end{tabular}
 %% should include software inclusion somewhere
