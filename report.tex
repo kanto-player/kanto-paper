@@ -2,6 +2,7 @@
 \usepackage[latin1]{inputenc}
 \usepackage[margin=1.0in]{geometry}
 \usepackage{fancyhdr}
+\usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
 \setcounter{secnumdepth}{2}
@@ -30,21 +31,81 @@ CSEE W4840 Final Report}
 
 \maketitle
 \newpage
-\abstract{This project presents an audio player with frequency visualization. The user is able to play audio files from an SD card and view a nice visualization on a VGA display. We use a field-programmable gate array (FPGA) for implementation, with software handling user interaction and song coordination and hardware handling actual audio output and FFT visualization. }
+
+\abstract{This project presents an audio player with frequency visualization. 
+The user is able to play audio files from an SD card and view a nice visualization 
+on a VGA display. We use a field-programmable gate array (FPGA) for implementation, 
+with software handling user interaction and song coordination and hardware handling 
+actual audio output and FFT visualization. }
 
 \section{Introduction}
+
+
+\subsection{SPI Protocol}
 
 \section{System Architecture}
 
 \subsection{High-Level Overview}
 % include data path
 % block diagram
-\subsection{Low-Level Implementation Details}
+
 \subsection{FFT Unit}
+The FFT unit is used to compute the discrete frequency transform of a set of audio
+samples to be visualized. 
+
+	\subsubsection{Fast Fourier Transform Algorithm}
+	We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
+	frequency transform of a given sample. The number of frequencies $N$ computed by 
+	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
+	to optimize for 	space and time. The basic DFT is defined by the equation:
+	
+	$$
+	 X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
+	$$ 
+	
+	where $k$ is an integer from 0 to $N$. According to the Cooley-Tukey algorithm, 
+	we split our original input into 16 different parts and perform a DFT on each
+	individual component. We can then recombine the individual DFT outputs in 4
+	recombination stages, using the following equation for each stage: 
+	$$
+	X_k = \left\{
+	\begin{matrix}
+		E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
+		E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
+		k \geq N/2. 
+	\end{matrix} 
+	\right. 
+	$$
+	
+	The resulting output is 256 frequency values.
+	
+	\subsubsection{Block Diagram}
+	
+% block diagram
+% pipeline diagram
+% timing diagram
+% test benches if available
+
 \subsection{Audio Buffer}
+% block diagram
+% state diagram
+% timing diagram
+% test benches if available
+
 \subsection{Visualizer}
+% block diagram
+% state diagram
+% timing diagram
+% test benches if available
+
 \subsection{SD Card Controller}
+% block diagram
+% state diagram
+% timing diagram
+% test benches if available
+
 \subsection{Software User Interface}
+
 
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
@@ -59,7 +120,7 @@ Milestone 2 & Apr 16 & Individual peripherals written in VHDL and test benched.&
 Milestone 3 & Apr 30 & Build interfaces between all peripherals and finish synchronization software. &
 	\textit{Completed}\\
 &&&\\
-Deadline&May 9&System complete and presentation finished.&\textit{Completed.}\\
+Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 &&&\\
 \end{tabular}
 %% should include software inclusion somewhere
