@@ -42,10 +42,9 @@ CSEE W4840 Final Report}
 \subsection{Low-Level Implementation Details}
 \subsection{FFT Unit}
 \subsection{Audio Buffer}
-\subsection{Visualizer}
+\subsection{Visualizer} There are two main tasks that the vizualizer needs to accomplish.  The first is sequentially reading in the data produced by the FFT and the other is displaying that data on the vga.  Originally all 256 different frequencies were being displayed however after initial designs the decision made was to include data for the first 32 frequencies on the display since these are the hearable frequencies.  The reading process requires two states, a holding state and a reading state.  The transition to reading happens when the FFT sends a "done" signal which means that the data is in place to be read.  For display purposes, the 32 frequencies are placed into 16 bins, 2 per bin, each of which corresponds to one of sixteen bars located horizontally across the screen.  The height of these bars is decided by summing the amplitude of the two frequencies contained in the bin and then scaling this value to the necessary height for the screen.\\An additional functionality that was added was the ability to change color of the bars appearing on the screen.  Three switches correspond to red, green, and blue and allow the user to mix and match to create different colors.  The switches are active low so the default color when all switches are "off" is the white so as to be seen on the black background.
 \subsection{SD Card Controller}
 \subsection{Software User Interface}
-
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
 \textbf{Milestone} & \textbf{Date} & \textbf{Goal} & \textbf{Accomplished}\\ \hline
