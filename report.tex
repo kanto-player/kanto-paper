@@ -53,29 +53,26 @@ samples to be visualized.
 
 	\subsubsection{Fast Fourier Transform Algorithm}
 	We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
-	frequency transform of a given sample. The number of frequencies $N$ computed by 
+	frequency transform of a given sample. The number of frequencies \(N\) computed by 
 	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
 	to optimize for 	space and time. The basic DFT is defined by the equation:
 	
-	$$
-	 X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
-	$$ 
+	\[ X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk} \]
 	
-	where $k$ is an integer from 0 to $N$. 
+	where \(k\) is an integer from 0 to \(N\). 
 	
 	According to the Cooley-Tukey algorithm, 
 	we split our original input into 16 different parts and perform a DFT on each
 	individual component. We can then recombine the individual DFT outputs in 4
 	recombination stages, using the following equation for each stage: 
-	$$
-	X_k = \left\{
+	
+	\[ X_k = \left\{
 	\begin{matrix}
 		E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
 		E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
 		k \geq N/2. 
 	\end{matrix} 
-	\right. 
-	$$
+	\right. \]
 	
 	The resulting output is 256 frequency values.
 	
