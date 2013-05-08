@@ -40,15 +40,13 @@ actual audio output and FFT visualization. }
 
 \section{Introduction}
 
-
-\subsection{SPI Protocol}
-
 \section{System Architecture}
 
 \subsection{High-Level Overview}
 % include data path
 % block diagram
 
+\section{Design Implementation}
 \subsection{FFT Unit}
 The FFT unit is used to compute the discrete frequency transform of a set of audio
 samples to be visualized. 
@@ -63,7 +61,9 @@ samples to be visualized.
 	 X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
 	$$ 
 	
-	where $k$ is an integer from 0 to $N$. According to the Cooley-Tukey algorithm, 
+	where $k$ is an integer from 0 to $N$. 
+	
+	According to the Cooley-Tukey algorithm, 
 	we split our original input into 16 different parts and perform a DFT on each
 	individual component. We can then recombine the individual DFT outputs in 4
 	recombination stages, using the following equation for each stage: 
@@ -99,6 +99,10 @@ samples to be visualized.
 % test benches if available
 
 \subsection{SD Card Controller}
+	\subsubsection{SPI Protocol}
+	\subsubsection{Block Diagram}
+	
+
 % block diagram
 % state diagram
 % timing diagram
@@ -106,6 +110,10 @@ samples to be visualized.
 
 \subsection{Software User Interface}
 
+\subsection{Miscellaneous Controller Components}
+\subsubsection{The Conductor}
+\subsubsection{Phase-Locked Loop for Multiple Clocks}
+The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and \textbf{something} for the audio output. %% NEED AUDIO CLOCK SPEED 44100/s? 
 
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
