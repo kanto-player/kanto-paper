@@ -55,11 +55,11 @@ samples to be visualized.
 	We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
 	frequency transform of a given sample. The number of frequencies \(N\) computed by 
 	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
-	to optimize for 	space and time. The basic DFT is defined by the equation:
+	to optimize for space and time. The basic DFT is defined by the equation:
 	
 	\[ X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk} \]
 	
-	where \(k\) is an integer from 0 to \(N\). 
+	where \(k\) and \(n\) are integers from 0 to \(N\). 
 	
 	According to the Cooley-Tukey algorithm, 
 	we split our original input into 16 different parts and perform a DFT on each
@@ -76,7 +76,34 @@ samples to be visualized.
 	
 	The resulting output is 256 frequency values.
 	
-	\subsubsection{Block Diagram}
+	\subsubsection{Block Diagrams}
+
+	The FFT hardware consists of two types of pipelines, one for the DFT,
+	and another for the recombination.
+
+	\begin{figure}[H]
+		\caption{DFT Unit}
+		\centering
+		\includegraphics[scale=0.375]{dft-unit}
+	\end{figure}
+
+	\begin{figure}[H]
+		\caption{Recombination Unit}
+		\centering
+		\includegraphics[scale=0.3]{recombinator}
+	\end{figure}
+
+	The complex multiplier in the recombination unit performs its computation
+	in two pipelined steps, as follows.
+
+	\begin{figure}[H]
+		\caption{Complex Multiplier}
+		\includegraphics[scale=0.375]{complex-mult}
+	\end{figure}
+
+	Our top level FFT block uses two DFT units, a recombination unit,
+	two RAMs (one for time domain data and one for frequency domain data),
+	four ROMs for the recombination, and one ROM for the DFT coefficients.
 	
 % block diagram
 % pipeline diagram
