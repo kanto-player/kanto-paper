@@ -154,6 +154,27 @@ block RAM.
 	
 \subsection{Audio Buffer}
 
+The audio buffer controls playback of the audio data. It contains a RAM
+holding 512 16-bit values and a unit that speaks to the Wolfson WM8731
+audio codec on the DE2 board.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{audio-buffer}
+	\caption{Audio Buffer}
+\end{figure}
+
+The audio codec interface reads in a 16-bit sample from the audio RAM and
+transmits the bits serially to the audio codec. Once the last bit has been
+transmitted, the next sample is requested from the audio RAM.
+
+The audio RAM is effectively split in two so that the audio codec interface
+plays samples from one half while the SD card writes to the other. This is
+the reason why the RAM is chosen to hold 512 samples, since one SD card
+block is 512 bytes, or 256 samples. Once the audio codec interface plays 
+sample 255 or 511 (indexed from 0), it sends a signal indicating that the 
+SD card controller should read in another block.
+
 \subsection{Visualizer} 
 
 There are two main tasks that the vizualizer needs to accomplish.  
