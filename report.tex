@@ -147,6 +147,10 @@ The controller, in response to an external start signal, triggers
 This is followed by 4 stages of recombination. Each recombination stage
 uses a different ROM and consists of 8 steps (32 out of 256 outputs are
 computed on each step).
+
+The multipliers used in this design all use the dedicated multiplier 
+circuitry on the Cyclone II. All RAMs and ROMs use the dual-port M4K
+block RAM.
 	
 \subsection{Audio Buffer}
 
