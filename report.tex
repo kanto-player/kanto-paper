@@ -189,8 +189,11 @@ For display purposes, the 32 frequencies are placed into 16 bins, 2 per bin,
 each of which corresponds to one of sixteen bars located horizontally across 
 the screen.  The height of these bars is decided by summing the amplitude of 
 the two frequencies contained in the bin and then scaling this value to the 
-necessary height for the screen.\\An additional functionality that was added 
-was the ability to change color of the bars appearing on the screen.  
+necessary height for the screen.
+
+It was necessary to use two different clocks since the vga display requires a 25.1 MHz clock, in this case a 25 MHz clock as used.  There was no need to read in data on the slower clock and therefore the a 50 MHz clock was used there so as to read the data as quickly as possible. 
+
+An additional functionality that was added was the ability to change color of the bars appearing on the screen.  
 Three switches correspond to red, green, and blue and allow the user to mix 
 and match to create different colors.  The switches are active low so the 
 default color when all switches are "off" is the white so as to be seen on the 
@@ -222,7 +225,8 @@ were made so that new data is only read in when data is not being drawn to the s
 
 The visualizer unit and audio playback required different clocks to drive their 
 respective peripherals, but also required clocks to synchronize communication 
-with other modules in the kanto system. To most easily configure these clocks, 
+with other modules in the kanto 
+. To most easily configure these clocks, 
 a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL 
 was used to generate a 50MHz clock for general system synchronization, a 25MHz 
 clock to drive the VGA display, and 11.29 MHz for the audio output. 
