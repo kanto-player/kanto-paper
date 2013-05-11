@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \setcounter{secnumdepth}{2}
-
+\setcounter{equation}{0}
 
 \title{Kanto Player \\
 CSEE W4840 Final Report}
@@ -57,7 +57,9 @@ samples to be visualized.
 	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
 	to optimize for space and time. The basic DFT is defined by the equation:
 	
-	\[ X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk} \]
+	\begin{equation}
+		X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
+	\end{equation}
 	
 	where \(k\) and \(n\) are integers from 0 to \(N\). 
 	
@@ -66,13 +68,15 @@ samples to be visualized.
 	individual component. We can then recombine the individual DFT outputs in 4
 	recombination stages, using the following equation for each stage: 
 	
-	\[ X_k = \left\{
-	\begin{matrix}
-		E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
-		E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
-		k \geq N/2. 
-	\end{matrix} 
-	\right. \]
+	\begin{equation}
+		X_k = \left\{
+		\begin{matrix}
+			E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
+			E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
+			k \geq N/2. 
+		\end{matrix} 
+		\right.
+	\end{equation}
 	
 	The resulting output is 256 frequency values.
 	
