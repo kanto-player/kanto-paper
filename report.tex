@@ -51,102 +51,102 @@ actual audio output and FFT visualization. }
 The FFT unit is used to compute the discrete frequency transform of a set of audio
 samples to be visualized. 
 
-	\subsubsection{Fast Fourier Transform Algorithm}
-	We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
-	frequency transform of a given sample. The number of frequencies \(N\) computed by 
-	the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
-	to optimize for space and time. The basic DFT is defined by the equation:
-	
-	\begin{equation}
-		X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
-	\end{equation}
-	
-	where \(k\) and \(n\) are integers from 0 to \(N\). 
-	
-	According to the Cooley-Tukey algorithm, 
-	we split our original input into 16 different parts and perform a DFT on each
-	individual component. We can then recombine the individual DFT outputs in 4
-	recombination stages, using the following equation for each stage: 
-	
-	\begin{equation}
-		X_k = \left\{
-		\begin{matrix}
-			E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
-			E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
-			k \geq N/2. 
-		\end{matrix} 
-		\right.
-	\end{equation}
-	
-	The resulting output is 256 frequency values.
+\subsubsection{Fast Fourier Transform Algorithm}
+We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
+frequency transform of a given sample. The number of frequencies \(N\) computed by 
+the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
+to optimize for space and time. The basic DFT is defined by the equation:
 
-	\newpage
-	
-	\subsubsection{Block Diagrams}
+\begin{equation}
+	X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi i}{N} nk}
+\end{equation}
 
-	The FFT hardware consists of two types of pipelines, one for the DFT,
-	and another for the recombination. 
+where \(k\) and \(n\) are integers from 0 to \(N\). 
 
-	\begin{figure}[H]
-		\centering
-		\includegraphics[scale=0.3]{dft-unit}
-		\caption{DFT Unit}
-	\end{figure}
+According to the Cooley-Tukey algorithm, 
+we split our original input into 16 different parts and perform a DFT on each
+individual component. We can then recombine the individual DFT outputs in 4
+recombination stages, using the following equation for each stage: 
 
-	The DFT pipeline computes a 16-point DFT according to equation 1. 
+\begin{equation}
+	X_k = \left\{
+	\begin{matrix}
+		E_k + e^{-\frac{2\pi i}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
+		E_{k-N/2} - e^{-\frac{2\pi i}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
+		k \geq N/2. 
+	\end{matrix} 
+	\right.
+\end{equation}
 
-	\begin{figure}[H]
-		\centering
-		\includegraphics[scale=0.3]{recombinator}
-		\caption{Recombination Unit}
-	\end{figure}
-	
-	The recombination unit computes 32 parts of the recombinational step 
-	according to equation 2. The upper and lower parts, \(X_k\) and 
-	\(X_{k + N / 2}\), are computed in parallel. This allows us to re-use the 
-	odd term \(e^{-\frac{2\pi i}{N}k} O_k\).
+The resulting output is 256 frequency values.
 
-	The complex multiplier in the recombination unit performs its computation
-	in two pipelined steps, as follows.
+\newpage
 
-	\begin{figure}[H]
-		\centering
-		\includegraphics[scale=0.3]{complex-mult}
-		\caption{Complex Multiplier}
-	\end{figure}
+\subsubsection{Block Diagrams}
 
-	Our top-level FFT block uses two DFT units, a recombination unit,
-	two RAMs (one for time domain data and one for frequency domain data),
-	four ROMs for the recombination, one ROM for the DFT coefficients, and
-	a control unit to set all the multiplexers and control the flow of
-	computation.
+The FFT hardware consists of two types of pipelines, one for the DFT,
+and another for the recombination. 
 
-	\begin{figure}[H]
-		\centering
-		\includegraphics[scale=0.3]{fft-top}
-		\caption{FFT Top-Level}
-	\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{dft-unit}
+	\caption{DFT Unit}
+\end{figure}
 
-	The DFT ROM holds 256 32-bit values, each one of which represents a
-	complex number (higher 16 bits for real part and lower 16 bits for
-	imaginary part). These values represent the constant coefficients
-	in the DFT equation \(e^{-\frac{2\pi i}{N} n k}\) as 16-bit fixed-point
-	precision numbers. Each value is addressed by an 8-bit address, where
-	the highest four bits represent the value of \(k\) and the lowest four bits
-	represent the value \(n\).
+The DFT pipeline computes a 16-point DFT according to equation 1. 
 
-	Similarly, the 4 recombination ROMs have 16, 32, 64, or 128 fixed point
-	imaginary values. These correspond to the constant coefficients
-	\(e^{-\frac{2\pi i}{N}k}\) from equation 2. The ROMs have 4-bit addresses, 
-	so only 16 values can be accessed during a single recombination step. 
-	For the larger ROMs, a select input set by the controller control which 
-	chunk of 16 values can be addressed.
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{recombinator}
+	\caption{Recombination Unit}
+\end{figure}
 
-	The controller, in response to an external start signal, triggers
-	16 DFT computations, with 2 computations running in parallel at a time.
-	This is followed by 4 stages of recombination. Each recombination stage
-	uses a different ROM and consists of 8 steps (32 out of 256 outputs are
-	computed on each step).
+The recombination unit computes 32 parts of the recombinational step 
+according to equation 2. The upper and lower parts, \(X_k\) and 
+\(X_{k + N / 2}\), are computed in parallel. This allows us to re-use the 
+odd term \(e^{-\frac{2\pi i}{N}k} O_k\).
+
+The complex multiplier in the recombination unit performs its computation
+in two pipelined steps, as follows.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{complex-mult}
+	\caption{Complex Multiplier}
+\end{figure}
+
+Our top-level FFT block uses two DFT units, a recombination unit,
+two RAMs (one for time domain data and one for frequency domain data),
+four ROMs for the recombination, one ROM for the DFT coefficients, and
+a control unit to set all the multiplexers and control the flow of
+computation.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{fft-top}
+	\caption{FFT Top-Level}
+\end{figure}
+
+The DFT ROM holds 256 32-bit values, each one of which represents a
+complex number (higher 16 bits for real part and lower 16 bits for
+imaginary part). These values represent the constant coefficients
+in the DFT equation \(e^{-\frac{2\pi i}{N} n k}\) as 16-bit fixed-point
+precision numbers. Each value is addressed by an 8-bit address, where
+the highest four bits represent the value of \(k\) and the lowest four bits
+represent the value \(n\).
+
+Similarly, the 4 recombination ROMs have 16, 32, 64, or 128 fixed point
+imaginary values. These correspond to the constant coefficients
+\(e^{-\frac{2\pi i}{N}k}\) from equation 2. The ROMs have 4-bit addresses, 
+so only 16 values can be accessed during a single recombination step. 
+For the larger ROMs, a select input set by the controller control which 
+chunk of 16 values can be addressed.
+
+The controller, in response to an external start signal, triggers
+16 DFT computations, with 2 computations running in parallel at a time.
+This is followed by 4 stages of recombination. Each recombination stage
+uses a different ROM and consists of 8 steps (32 out of 256 outputs are
+computed on each step).
 	
 \subsection{Audio Buffer}
 
