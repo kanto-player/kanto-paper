@@ -111,7 +111,7 @@ in two pipelined steps, as follows.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.3]{complex-mult}
+	\includegraphics[scale=0.4]{complex-mult}
 	\caption{Complex Multiplier}
 \end{figure}
 
@@ -123,7 +123,7 @@ computation.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.3]{fft-top}
+	\includegraphics[scale=0.35]{fft-top}
 	\caption{FFT Top-Level}
 \end{figure}
 
@@ -199,18 +199,49 @@ and match to create different colors.  The switches are active low so the
 default color when all switches are "off" is the white so as to be seen on the 
 black background.  In order to improve the accuracy of the display adjustments 
 were made so that new data is only read in when data is not being drawn to the screen.
+
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.9]{viz_block_diagram.png}
+	\includegraphics[scale=0.5]{viz_block_diagram.png}
 	\caption{Visualizer}
 \end{figure}
 % timing diagram
 % test benches if available
 
 \subsection{SD Card Controller}
-	\subsubsection{SPI Protocol}
-	\subsubsection{Block Diagram}
-	
+
+The SD card controller is responsible for initializing the SD card's own
+built-in controller, sending read commands to the SD card as necessary, and
+receiving the data and writing it to the audio buffer.  It takes as inputs the
+global clock and a 32-bit SD block address to read, and it sends write data,
+write address, and write enable to the audio buffer.
+
+\subsubsection{SPI Bus Protocol}
+
+SD cards support three communication protocols: SPI bus mode, 1-bit SD bus
+mode, and 4-bit SD bus mode. Our implementation uses the SPI bus, which is the
+simplest; the controller acts as the master device, and the SD card acts as a
+single slave.  The signals on the SPI bus are:
+\begin{itemize}
+	\item SCLK - clock, controlled by the master
+	\item MOSI - master out, slave in
+	\item MISO - master in, slave out
+	\item CS' - chip select (active low)
+\end{itemize}
+
+\subsubsection{SD Card Data Formatting}
+
+Support for standard filesystems is not implemented. However, there is support
+for multiple song files. SD cards are addressed as 512-byte blocks. As such,
+the first 512 bytes of the SD card is dedicated to metadata - it contains the
+start and end addresses for each song on the SD card.
+
+The songs themselves are in 16-bit raw PCM format, written to the SD card end
+to end and aligned to 512 byte boundaries. The start and end addresses of each
+song, as discussed earlier, match contained in the metadata block.
+
+\subsubsection{Block Diagram}
+
 
 % block diagram
 % state diagram
