@@ -234,11 +234,11 @@ single slave.  The signals on the SPI bus are:
 Support for standard filesystems is not implemented. However, there is support
 for multiple song files. SD cards are addressed as 512-byte blocks. As such,
 the first 512 bytes of the SD card is dedicated to metadata - it contains the
-start and end addresses for each song on the SD card.
+start addresses for each song on the SD card.
 
 The songs themselves are in 16-bit raw PCM format, written to the SD card end
-to end and aligned to 512 byte boundaries. The start and end addresses of each
-song, as discussed earlier, match contained in the metadata block.
+to end and aligned to 512 byte boundaries. The start addresses of each
+song, as discussed earlier, are contained in the metadata block.
 
 \subsubsection{Block Diagram}
 
