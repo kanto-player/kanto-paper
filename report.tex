@@ -237,6 +237,12 @@ telling it to perform a read. Once the signal is sent, the controller sends
 the read command with the SD card block address as argument and then reads
 the response from the SD card.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{sd-controller}
+	\caption{SD Card Control Flowchart}
+\end{figure}
+
 \subsubsection{SD Card Data Formatting}
 
 Support for standard filesystems is not implemented. However, there is support
@@ -247,14 +253,6 @@ start addresses for each song on the SD card.
 The songs themselves are in 16-bit raw PCM format, written to the SD card end
 to end and aligned to 512 byte boundaries. The start addresses of each
 song, as discussed earlier, are contained in the metadata block.
-
-\subsubsection{Block Diagram}
-
-
-% block diagram
-% state diagram
-% timing diagram
-% test benches if available
 
 \subsection{Software User Interface}
 
