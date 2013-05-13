@@ -474,22 +474,24 @@ with the capability of changing the color of the visualization.
 
 \subsubsection{Testbenches}
 
-Where feasible, testbenches were invaluable in insuring correct behavior of
-components, before we introduced them into the greater system. For example, for
-the FFT unit, the entire algorithm was first implemented in software (in the C
-language) before hardware development began. Then, the FFT of a given test
-sample could be computed in software. This could be compared to the hardware
-output to check for consistency. Surprisingly, the initial issues bugs were in
-the software, and not the hardware.
+Testbenches were invaluable in insuring correct behavior of components before
+we introduced them into the system. For example, the entire FFT algorithm  was
+first implemented in software (in the C language) before hardware development
+began. Then, the FFT of a given test sample was computed in software. This was
+compared to the hardware output to check for consistency. Surprisingly, the
+initial issues bugs were in the software, and not the hardware.
+
+A similar testbench was run on the conductor. We simulated the other system
+components and made sure that the conductor could manage them properly.
 
 \subsubsection{Peripheral Testing}
 
-Many challenges involved in the project came up when interfacing with
-peripherals. In these cases, test benching was impractical. We instead wrote
-very simple test drivers in VHDL and observed the behavior. For example, the
-visualizer was tested by inputting preset levels and making sure they displayed
-properly on the screen; the SD card controller was known by block-level writing
-known data to the SD card and making sure that the correct data was read.
+Much of our project involved interfacing with peripherals. This made simulation
+testbenching impossible. We instead wrote simple test drivers in VHDL and
+observed their behaviors. For example, the visualizer was tested by inputting
+preset levels and making sure they displayed properly on the screen; the SD
+card controller was known by block-level writing known data to the SD card and
+making sure that the correct data was read.
 
 \section{Reflections \& Prospectus}
 
