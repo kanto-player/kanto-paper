@@ -256,12 +256,10 @@ song, as discussed earlier, are contained in the metadata block.
 
 The visualizer unit and audio playback required different clocks to drive their 
 respective peripherals, but also required clocks to synchronize communication 
-with other modules in the kanto 
-. To most easily configure these clocks, 
+with other modules in the system. To more easily configure these clocks, 
 a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL 
 was used to generate a 50MHz clock for general system synchronization, a 25MHz 
 clock to drive the VGA display, and 11.29 MHz for the audio output. 
-%% NEED AUDIO CLOCK SPEED 44100/s? 
 
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
@@ -341,13 +339,13 @@ Timing issues can be a big problem in a complex design, especially if external
 hardware is involved, as different hardware peripherals require different clocks. 
 For our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz 
 clock, and the SD card used a 6.25 MHz clock. We used a PLL for the first two 
-and clock enables for the last one (since the SD card clock wasn’t always running). 
+and clock enables for the last one (since the SD card clock wasn't always running). 
 But passing status and control signals between units running on different clocks 
 ended up being a minor challenge. We ended up solving this problem by either 
 stretching the signals or detecting the rising edge of signals.
 
 The fact that both reading in VGA data and refreshing the VGA display take more 
-than one cycle means that we needed to ensure that the data wasn’t being changed 
+than one cycle means that we needed to ensure that the data wasn't being changed 
 while the display was in the middle of refreshing. This was accomplished by 
 reading data into a separate set of registers and only transferring it to the 
 registers used by the refreshing process once the refresh had reached the edge 
@@ -359,14 +357,14 @@ seen on the display.
 Interfacing to external hardware like the SD card and the audio codec were by 
 far the most challenging parts of the assignment, mainly because it was very 
 difficult to debug. Since proper functioning depended on what the external 
-hardware was doing, we couldn’t really use VHDL testbenches like we did for 
-the rest of the components, since our testbenches wouldn’t exactly replicate 
+hardware was doing, we couldn't really use VHDL testbenches like we did for 
+the rest of the components, since our testbenches wouldn't exactly replicate 
 the behavior of the external hardware. We found that the best way to get 
 interfaces to external hardware working was to base our implementation off of 
 existing implementations. For instance, for the audio buffer, we used the 
 components provided for lab 3 to interface with the audio codec, but modified 
 the files to achieve the correct sampling frequency. For the SD card controller, 
-we based a lot of our code off of the SPI controller from Prof. Edward’s Apple 
+we based a lot of our code off of the SPI controller from Prof. Edward's Apple 
 II FPGA project, as well as the SD card driver code in the Linux Kernel. 
 
 \subsection{Reduction of Hardware Usage}
@@ -403,7 +401,7 @@ Our plan for completion of the project consisted of each component being
 developed and tested individually and then linked together. Although this plan 
 did not end up backfiring in this particular case, an alternate method could 
 have been a more step-by-step approach, starting with the SD card and moving 
-“linearly” through the different components ending with the visualizer. This 
+"linearly" through the different components ending with the visualizer. This 
 method would have allowed us to have more concrete deliverables during 
 milestones as well as to have a more exact knowledge of exactly where we were 
 in the process.
