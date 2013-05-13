@@ -324,7 +324,116 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 
 \section{Challenges \& Lessons Learned}
 
+\subsection{Changing Parallelism Levels}
+
+At a certain point in a project, we had to reduce the amount of parallelism in 
+the FFT unit in order to reduce the number of logic gates used by the board. 
+We found that reducing the level of parallelism is often just as hard, if not 
+harder, than adding parallelism. Both require extensive changes. It would have 
+made things much easier if we had decided on the proper level of parallelism 
+at the outset. If we had done some quick calculations at the outset, we would 
+have discovered that could have used a very low level of parallelism and still 
+been well within the deadlines imposed by the timing of our system.
+
+\subsection{Timing Issues}
+
+Timing issues can be a big problem in a complex design, especially if external 
+hardware is involved, as different hardware peripherals require different clocks. 
+For our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz 
+clock, and the SD card used a 6.25 MHz clock. We used a PLL for the first two 
+and clock enables for the last one (since the SD card clock wasn’t always running). 
+But passing status and control signals between units running on different clocks 
+ended up being a minor challenge. We ended up solving this problem by either 
+stretching the signals or detecting the rising edge of signals.
+
+The fact that both reading in VGA data and refreshing the VGA display take more 
+than one cycle means that we needed to ensure that the data wasn’t being changed 
+while the display was in the middle of refreshing. This was accomplished by 
+reading data into a separate set of registers and only transferring it to the 
+registers used by the refreshing process once the refresh had reached the edge 
+of the screen.  This made it possible to reduce the flickering that was being 
+seen on the display.
+
+\subsection{Interfacing to External Hardware}
+
+Interfacing to external hardware like the SD card and the audio codec were by 
+far the most challenging parts of the assignment, mainly because it was very 
+difficult to debug. Since proper functioning depended on what the external 
+hardware was doing, we couldn’t really use VHDL testbenches like we did for 
+the rest of the components, since our testbenches wouldn’t exactly replicate 
+the behavior of the external hardware. We found that the best way to get 
+interfaces to external hardware working was to base our implementation off of 
+existing implementations. For instance, for the audio buffer, we used the 
+components provided for lab 3 to interface with the audio codec, but modified 
+the files to achieve the correct sampling frequency. For the SD card controller, 
+we based a lot of our code off of the SPI controller from Prof. Edward’s Apple 
+II FPGA project, as well as the SD card driver code in the Linux Kernel. 
+
+\subsection{Reduction of Hardware Usage}
+
+At its peak, our design used up 89\% of the logic elements on the FPGA. 
+We found out that this was because we were accidentally using logic elements 
+instead of block RAM for all of our memory components. After switching over 
+the memory components to block RAM, our logic element usage went down to only 
+10\%, while our block ram usage went from 1\% to only 5\%. This showed us the 
+importance of actually using memory elements for memory.
+
+Changing things over to block RAM did require a lot of other changes to our 
+design. For instance, since the block RAM only had two ports, we had to 
+dramatically reduce the amount of parallelism in the FFT unit. We also had to 
+duplicate some memory. For instance, whereas before, the FFT unit and audio 
+buffer shared the same memory for the time domain samples, we eventually had 
+to separate this into two different RAMs which the SD card controller wrote 
+two simultaneously. However, as mentioned above, this duplication did not add 
+that much to our memory requirements. 
+
+Having a modular design, both at the highest level and at the level of each 
+component, made these changes go relatively smoothly.
+
 \section{Reflections \& Prospectus}
+
+Our group is very satisfied with the final version of our project.  
+Although certain elements did not conform to the originally decided-upon 
+structure - for example, the SRAM was replaced with block RAM, and the software 
+played a different role than was originally foreseen - we did accomplish all 
+major project goals and added slight additional functionality such as 
+changeable colors on the visualizer and track selection.
+
+Our plan for completion of the project consisted of each component being 
+developed and tested individually and then linked together. Although this plan 
+did not end up backfiring in this particular case, an alternate method could 
+have been a more step-by-step approach, starting with the SD card and moving 
+“linearly” through the different components ending with the visualizer. This 
+method would have allowed us to have more concrete deliverables during 
+milestones as well as to have a more exact knowledge of exactly where we were 
+in the process.
+
+Another consequence of our scheduling was that, as the semester progressed, 
+we discovered that, although we remained fairly on track with our predetermined 
+milestones throughout the semester and completed the project ahead of the 
+deadline, our description of them was slightly vague and hard to verify during 
+the biweekly milestone check-ins. This could have been remedied in multiple ways. 
+One option would have been to decide upon specific deliverables due at each 
+milestone to demonstrate our progress. Another would have been to review our 
+milestones with Professor Edward or our adviser before deciding upon them.
+
+One situation that needed to be contended with was that we had a fairly large 
+group and also lost a group member early in the process.  That being said, 
+we felt that by staying organized and updating the entire group regularly on 
+our progress we were able to stay on track and informed about the status of the 
+project and what needed to be accomplished next as well as compensate for the 
+lost group member.
+
+Although all the initial project goals have been accomplished, there are still 
+a few possible improvements and new features that could be implemented.
+For instance, the visualization could be made more complex than simply 
+displaying bars for each frequency. Having a more interesting visualization 
+would vastly improve the "coolness" factor of our project. Another possible 
+improvement would be to change the SD card format from our custom format to a 
+standard FAT filesystem. This would make it easier for the user to add songs to 
+the SD card, as they could simply copy audio files to the filesystem instead of 
+having to use custom tools for converting the data and writing it to the block 
+device.
  
  \appendix
 \section{Source Code}
