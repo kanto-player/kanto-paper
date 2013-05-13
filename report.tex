@@ -5,8 +5,33 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{caption}
+  \usepackage{courier}
+
 \setcounter{secnumdepth}{2}
 \setcounter{equation}{0}
+\captionsetup{width=10cm}
+
+ \lstset{
+         basicstyle=\footnotesize\ttfamily,        % font size for code
+         numberstyle=\tiny\color{mygray}, % line number style
+         numbersep=5pt,                   % how far the line-numbers are from the code
+         tabsize=2,                  % sets default tabsize to 2 spaces (FOR HOWIE :P)
+         extendedchars=true,         % non-ascii characters, but not for utf8 enc
+         breaklines=true,            % sets automatic line breaking
+         keywordstyle=\color{blue},
+ 	frame=single,                    % adds a frame around the code
+         stringstyle=\color{red}\ttfamily, % string literal style
+         showstringspaces=false,           % show spaces with underscores
+         showtabs=false,             % show tabs within strings adding particular underscores         
+         xleftmargin=17pt,
+         framexleftmargin=17pt,
+         framexrightmargin=5pt,
+         framexbottommargin=4pt
+ }
+
 
 \title{Kanto Player \\
 CSEE W4840 Final Report}
@@ -32,13 +57,8 @@ CSEE W4840 Final Report}
 \maketitle
 \newpage
 
-\abstract{This project presents an audio player with frequency visualization. 
-The user is able to play audio files from an SD card and view a nice visualization 
-on a VGA display. We use a field-programmable gate array (FPGA) for implementation, 
-with software handling user interaction and song coordination and hardware handling 
-actual audio output and FFT visualization. }
-
 \section{Introduction}
+This project presents an audio player with frequency visualization, implemented on an Altera DE2 Cyclone FPGA. The user is able to play audio files in a custom encoding from an SD card and view a nice visualization of the audio frequencies on a VGA display, similar to the visualization on classic music players. Our implementation uses hardware to handle audio output and frequency visualization, and software to handle user interaction and system initialization. The user can interact with the system using switches for color mixing and buttons for starting and stopping audio playback.
 
 \section{System Architecture}
 
@@ -91,7 +111,7 @@ and another for the recombination.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.3]{dft-unit}
-	\caption{DFT Unit}
+	\caption{Block diagram of the \texttt{DFT Unit} pipeline}
 \end{figure}
 
 The DFT pipeline computes a 16-point DFT according to equation 1. 
@@ -99,7 +119,7 @@ The DFT pipeline computes a 16-point DFT according to equation 1.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.3]{recombinator}
-	\caption{Recombination Unit}
+	\caption{Block diagram of the texttt{Recombination Unit} pipeline}
 \end{figure}
 
 The recombination unit computes 32 parts of the recombinational step 
@@ -113,7 +133,8 @@ in two pipelined steps, as follows.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.4]{complex-mult}
-	\caption{Complex Multiplier}
+	\caption{Block diagram of the \texttt{Complex Multiplier} unit used for 
+	recombination. }
 \end{figure}
 
 Our top-level FFT block uses two DFT units, a recombination unit,
@@ -125,7 +146,7 @@ computation.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.35]{fft-top}
-	\caption{FFT Top-Level}
+	\caption{Top-level block diagram of the \texttt{FFT} unit.}
 \end{figure}
 
 The DFT ROM holds 256 32-bit values, each one of which represents a
@@ -162,7 +183,7 @@ audio codec on the DE2 board.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.3]{audio-buffer}
-	\caption{Audio Buffer}
+	\caption{High-level block diagram of the \texttt{Audio Buffer} unit.}
 \end{figure}
 
 The audio codec interface reads in a 16-bit sample from the audio RAM and
@@ -204,7 +225,7 @@ were made so that new data is only read in when data is not being drawn to the s
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{viz_block_diagram.png}
-	\caption{Visualizer}
+	\caption{Block diagram of \texttt{Visualizer} unit.}
 \end{figure}
 % timing diagram
 % test benches if available
@@ -241,7 +262,7 @@ the response from the SD card.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.3]{sd-controller}
-	\caption{SD Card Control Flowchart}
+	\caption{Flowchart of control signals needed sent by the \texttt{SD Card Controller}. }
 \end{figure}
 
 \subsubsection{SD Card Data Formatting}
@@ -259,14 +280,24 @@ song, as discussed earlier, are contained in the metadata block.
 
 \subsection{Miscellaneous Controller Components}
 \subsubsection{The Conductor}
+The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
+\begin{itemize}
+\item \texttt{initial} --- When the system starts up, the conductor begins in the \texttt{initial} state. It immediately hands off control to the NIOS system for system initialization and playback control in the \texttt{cpuctrl} state.
+\item \texttt{cpuctrl} --- In this state, the NIOS system is handling user interaction. If the signal \texttt{nios\_readblock} is high, this indicates the metadata block has been read, and the system can copy a block of audio from the SD card. Otherwise, if the \texttt{nios\_play} signal is high, the system can begin or resume audio playback. In this condition, the block address to be read from is incremented.
+\item \texttt{trigger\_write} --- This state is a placeholder state to allow a buffer clock cycle so the \texttt{sd\_ready} signal is given time to propagate through to the \texttt{Conductor}.
+\item \texttt{wait\_write} --- In this state, the module waits until the \texttt{sd\_ready} flag is set high, indicating that a block has been read and control can be returned to the CPU.
+\item \texttt{resume} --- This state resets the \texttt{fft\_counter} signal before audio playback begins.
+\item \texttt{playing} --- This state handles audio buffer switching and tells the SD card to read blocks as the audio buffer and FFT iterate through them. 
+\end{itemize}
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=6in]{conductor_state.pdf}
+  \caption{Simplified State Diagram for the \texttt{Conductor} unit:
+    Mealy machine, using abstract transition descriptions and omitting unused
+    signals for compactness. \(\widetilde{}\)   denotes a lack of outputs}
+\end{figure}
 \subsubsection{Phase-Locked Loop for Multiple Clocks}
-
-The visualizer unit and audio playback required different clocks to drive their 
-respective peripherals, but also required clocks to synchronize communication 
-with other modules in the system. To more easily configure these clocks, 
-a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL 
-was used to generate a 50MHz clock for general system synchronization, a 25MHz 
-clock to drive the VGA display, and 11.29 MHz for the audio output. 
+The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and an 11.29MHz clock for the audio output.
 
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
@@ -287,7 +318,7 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 %% should include software inclusion somewhere
 
 
-\section{Contributions \& Teamwork}
+\section{Distribution of Work}
 	\begin{itemize}
 	
 	\item
@@ -329,108 +360,150 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 
 \section{Challenges \& Lessons Learned}
 
+\subsection{Interfacing to External Hardware}
+
+Interfacing to external hardware like the SD card and the audio codec were by far the 
+most challenging parts of the assignment, mainly because they were difficult to 
+debug. Since proper functionality depended on what the external hardware was 
+doing, we couldn’t reliably use Quartus testbenches like we did for the rest of the 
+components, since our testbenches wouldn’t exactly replicate the behavior of the 
+external hardware. We found that the best way to get interfaces to external hardware 
+working was to base our implementation off of successful existing implementations. 
+For instance, for the audio buffer, we used the components provided for Lab 3 to 
+interface with the audio codec, but modified the files to achieve the correct sampling 
+frequency. For the SD card controller, we based a lot of our code off of the SPI 
+controller from Prof. Edward’s Apple II FPGA project, as well as the SD card driver 
+code in the Linux Kernel. 
+
 \subsection{Changing Parallelism Levels}
 
-At a certain point in a project, we had to reduce the amount of parallelism in 
-the FFT unit in order to reduce the number of logic gates used by the board. 
-We found that reducing the level of parallelism is often just as hard, if not 
-harder, than adding parallelism. Both require extensive changes. It would have 
-made things much easier if we had decided on the proper level of parallelism 
-at the outset. If we had done some quick calculations at the outset, we would 
-have discovered that could have used a very low level of parallelism and still 
+Because of the extensive parallelism in the FFT module, it became difficult to fit the 
+entire system on the FPGA, and we had to reduce the amount of parallelism in the 
+FFT unit to decrease the number of logic gates used by the board. We found that 
+reducing the level of parallelism is often just as hard, if not harder, than adding 
+parallelism, and that both actions require extensive changes to the design of a 
+system. It would have made things much easier if we had decided on the proper level 
+of parallelism at the outset. If we had done some quick calculations at the outset, we 
+would have discovered that could have used a very low level of parallelism and still 
 been well within the deadlines imposed by the timing of our system.
 
 \subsection{Timing Issues}
 
 Timing issues can be a big problem in a complex design, especially if external 
-hardware is involved, as different hardware peripherals require different clocks. 
-For our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz 
-clock, and the SD card used a 6.25 MHz clock. We used a PLL for the first two 
-and clock enables for the last one (since the SD card clock wasn't always running). 
-But passing status and control signals between units running on different clocks 
-ended up being a minor challenge. We ended up solving this problem by either 
-stretching the signals or detecting the rising edge of signals.
+hardware is involved, as different hardware peripherals require different clocks. For 
+our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz clock, 
+and the SD card used a 6.25 MHz clock. We used a PLL for the first two and clock 
+enables for the last one (since the SD card clock wasn’t always running). But passing 
+status and control signals between units running on different clocks ended up being a 
+minor challenge as well. We ended up solving this problem by either stretching the 
+signals or detecting the rising edge of signals. 
 
-The fact that both reading in VGA data and refreshing the VGA display take more 
-than one cycle means that we needed to ensure that the data wasn't being changed 
-while the display was in the middle of refreshing. This was accomplished by 
-reading data into a separate set of registers and only transferring it to the 
-registers used by the refreshing process once the refresh had reached the edge 
-of the screen.  This made it possible to reduce the flickering that was being 
-seen on the display.
+Because the operations of reading in VGA data and refreshing the VGA display both 
+took more than one cycle meant that we needed to ensure that the data wasn’t being 
+changed while the display was in the middle of refreshing. This was accomplished by 
+reading data into a separate set of registers and only transferring it to the registers 
+used by the display processes once the refresh had reached the edge of the screen.  
+This made it possible to reduce flickering that was being seen on the display.
 
-\subsection{Interfacing to External Hardware}
 
-Interfacing to external hardware like the SD card and the audio codec were by 
-far the most challenging parts of the assignment, mainly because it was very 
-difficult to debug. Since proper functioning depended on what the external 
-hardware was doing, we couldn't really use VHDL testbenches like we did for 
-the rest of the components, since our testbenches wouldn't exactly replicate 
-the behavior of the external hardware. We found that the best way to get 
-interfaces to external hardware working was to base our implementation off of 
-existing implementations. For instance, for the audio buffer, we used the 
-components provided for lab 3 to interface with the audio codec, but modified 
-the files to achieve the correct sampling frequency. For the SD card controller, 
-we based a lot of our code off of the SPI controller from Prof. Edward's Apple 
-II FPGA project, as well as the SD card driver code in the Linux Kernel. 
+\subsection{Design Changes}
+\subsubsection{Removal of SRAM}
 
-\subsection{Reduction of Hardware Usage}
+In our initial design, we planned on using the SRAM to store the values for the audio 
+buffer and the output of the FFT unit. Separate components would communicate by 
+reading and writing values to the SRAM. We had implemented an SRAM controller 
+with four-phase handshaking to multiplex among the different components. We 
+eventually found, however, that our memory usage did not justify the extra complexity 
+that using SRAM imposed on our design, so we ended up using on-chip block RAM 
+instead.
 
-At its peak, our design used up 89\% of the logic elements on the FPGA. 
-We found out that this was because we were accidentally using logic elements 
-instead of block RAM for all of our memory components. After switching over 
-the memory components to block RAM, our logic element usage went down to only 
-10\%, while our block ram usage went from 1\% to only 5\%. This showed us the 
-importance of actually using memory elements for memory.
+\subsubsection{Reduction of Hardware Usage}
 
-Changing things over to block RAM did require a lot of other changes to our 
-design. For instance, since the block RAM only had two ports, we had to 
+At its peak, our design used up 89\% of the logic elements on the FPGA. We found out 
+that this was because we were accidentally using logic elements instead of block 
+RAM for all of our memory components. After switching over the memory components 
+to block RAM, our logic element usage went down to only 10\%, while our block RAM 
+usage went from 1\% to only 5\%. This showed us the importance of actually using 
+memory elements for memory.
+
+Shifting our memory components to block RAM did require a lot of other changes to 
+our design. For instance, since the block RAM only had two ports, we had to 
 dramatically reduce the amount of parallelism in the FFT unit. We also had to 
-duplicate some memory. For instance, whereas before, the FFT unit and audio 
-buffer shared the same memory for the time domain samples, we eventually had 
-to separate this into two different RAMs which the SD card controller wrote 
-two simultaneously. However, as mentioned above, this duplication did not add 
-that much to our memory requirements. 
+duplicate some memory. For instance, the FFT unit and audio buffer initially shared 
+the same memory for the time domain samples, but we eventually separated this into 
+two different RAMs which the SD card controller wrote to simultaneously. Although 
+these practices seemed counterintuitive, this duplication did not add that much to our 
+memory requirements, as noted above. 
 
-Having a modular design, both at the highest level and at the level of each 
-component, made these changes go relatively smoothly.
+Having a modular design, both at the highest level and at the level of each component, made these changes go relatively smoothly.
+
+\subsubsection{Adding Software Control}
+
+Initially, our design was implemented entirely in hardware, as we found our control 
+scheme wasn’t complex enough to require software. However, in order to satisfy the 
+requirements for the class, we had to add a software component. We decided to use 
+software to coordinate the initialization of our system, as well as track switching, and 
+have the hardware controller (the conductor) take over when the audio is actually 
+playing. 
+
+\subsubsection{Display Changes}
+
+After connecting the FFT and visualizer units together, we determined the visualizer 
+would be more aesthetically pleasing if we isolated and displayed only the 
+frequencies detectable to the human ear, in this case the first 32 frequencies of the 
+256 calculated by the FFT.  Another aesthetic change made was to provide the user 
+with the capability of changing the color of the visualization.
 
 \section{Reflections \& Prospectus}
 
-Our group is very satisfied with the final version of our project.  
-Although certain elements did not conform to the originally decided-upon 
-structure - for example, the SRAM was replaced with block RAM, and the software 
-played a different role than was originally foreseen - we did accomplish all 
-major project goals and added slight additional functionality such as 
-changeable colors on the visualizer and track selection.
+Our group is very satisfied with the final version of our project. We accomplished all 
+major project goals, and added improved functionality in certain modules, such as 
+color changes in the visualizer and track selection. Although certain elements did not 
+conform to the originally-delineated system design, such as replacing the SRAM with 
+block RAM and changing the role of software in the high-level design, we feel the 
+project exceeds our original goals for the project. There were a few areas under 
+which our group could have improved, namely in scheduling and deliverables, and 
+further design optimizations.
 
-Our plan for completion of the project consisted of each component being 
-developed and tested individually and then linked together. Although this plan 
-did not end up backfiring in this particular case, an alternate method could 
-have been a more step-by-step approach, starting with the SD card and moving 
-"linearly" through the different components ending with the visualizer. This 
-method would have allowed us to have more concrete deliverables during 
-milestones as well as to have a more exact knowledge of exactly where we were 
-in the process.
+\subsection{Scheduling \& Deliverables}
+Because of the modular nature of our system design, our plan for project completion 
+involved developing and optimizing each component fully in isolation, and then 
+linking them together afterwards. Although this plan was successful for our group, a 
+more productive strategy could have been a more sequential approach to system 
+design, starting with critical components, such as the SD card, and moving linearly 
+through the different components, ending with the visualizer.  This method would 
+have allowed us to have more concrete deliverables during milestones and helped 
+us detect system-wide issues earlier on, such as the heavy use of logical elements in 
+our memory and FFT designs. 
 
-Another consequence of our scheduling was that, as the semester progressed, 
-we discovered that, although we remained fairly on track with our predetermined 
-milestones throughout the semester and completed the project ahead of the 
-deadline, our description of them was slightly vague and hard to verify during 
-the biweekly milestone check-ins. This could have been remedied in multiple ways. 
-One option would have been to decide upon specific deliverables due at each 
-milestone to demonstrate our progress. Another would have been to review our 
-milestones with Professor Edward or our adviser before deciding upon them.
+Another consequence of our scheduling was that, although we remained fairly on 
+track with our predetermined milestones and ended up completing the design ahead 
+of schedule, our description of milestones and deliverables was extremely vague and 
+hard to verify during the biweekly milestone check-ins. This could have been 
+remedied in multiple ways. One option would have been to choose more specific, 
+tangible deliverables at each milestone to demonstrate our progress. Another would 
+have been to review our milestones with Professor Edwards or our adviser before 
+deciding upon them. 
 
-One situation that needed to be contended with was that we had a fairly large 
-group and also lost a group member early in the process.  That being said, 
-we felt that by staying organized and updating the entire group regularly on 
-our progress we were able to stay on track and informed about the status of the 
-project and what needed to be accomplished next as well as compensate for the 
-lost group member.
+One situation that needed to be contended with was that we had a larger group size 
+to begin with and also lost a group member early in the process. The large group size 
+was challenging because we needed to ensure the project goals were split evenly 
+and progress was continuously being made, while grappling with the schedules of 
+many different team members. Losing a group member only compounded the 
+problem, because we had to reorganize some of the work distribution early on in the 
+initial design phase. To address this, our team worked hard to maintain continued 
+lines of communication via e-mail checkups and twice-weekly meetings. We felt that 
+by staying organized and updating the entire group regularly on our progress, we 
+were able to stay informed about the status of the project and what our immediate 
+next tasks were, as well as reorganize tasks to compensate for the lost group 
+member. Some invaluable tools used for group management were \texttt{Google 
+Groups} and \texttt{Google Drive} for group email and documentation organization, 
+and \texttt{Github Organizations} to manage our repositories of project code.
 
-Although all the initial project goals have been accomplished, there are still 
-a few possible improvements and new features that could be implemented.
+\subsection{Optimizations \& Improvements}
+
+Although all the initial project goals have been accomplished, there are always 
+more improvements and new features that could be implemented.
 For instance, the visualization could be made more complex than simply 
 displaying bars for each frequency. Having a more interesting visualization 
 would vastly improve the "coolness" factor of our project. Another possible 
@@ -443,7 +516,80 @@ device.
  \appendix
 \section{Source Code}
  \subsection{VHDL}
+ \subsubsection{kanto.vhd}
+ 	 \lstinputlisting[language=VHDL]{../kanto/kanto.vhd}
+ \subsubsection{audio\_buffer.vhd}
+ 	 \lstinputlisting[language=VHDL]{../kanto/audio_buffer.vhd}
+ \subsubsection{complex\_mult.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/complex_mult.vhd}
+ \subsubsection{conductor.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/conductor.vhd}
+ \subsubsection{de2\_kanto\_ctrl.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/de2_kanto_ctrl.vhd}
+ \subsubsection{dft\_stage1.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/dft_stage1.vhd}
+ \subsubsection{dft\_stage2.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/dft_stage2.vhd}
+ \subsubsection{dft\_stage3.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/dft_stage3.vhd}
+ \subsubsection{dft\_top.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/dft_top.vhd}
+ \subsubsection{fft\_controller.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/fft_controller.vhd}
+ \subsubsection{fft\_fdom\_ram.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/fft_fdom_ram.vhd}
+ \subsubsection{fft\_recomb.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/fft_recomb.vhd}
+ \subsubsection{fft\_tdom\_ram.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/fft_tdom_ram.vhd}
+ \subsubsection{recomb\_stage1.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/recomb_stage1.vhd}
+ \subsubsection{recomb\_stage2.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/recomb_stage2.vhd}
+ \subsubsection{recomb\_stage3.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/recomb_stage3.vhd}
+ \subsubsection{sd\_controller.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/sd_controller.vhd}
+ \subsubsection{sdbuf.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/sdbuf.vhd}
+ \subsubsection{visualizer.vhd}
+	 \lstinputlisting[language=VHDL]{../kanto/visualizer.vhd}
+
+
  \subsection{C}
+  \subsubsection{main.c}
+	 \lstinputlisting[language=C]{../kanto/software/kanto_software/main.c}
+  \subsubsection{fft\/comp2real.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/comp2real.c}
+  \subsubsection{fft\/dftcoeffgen.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/dftcoeffgen.c}
+  \subsubsection{fft\/dftsim.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/dftsim.c}
+  \subsubsection{fft\/rccoeffgen.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/rccoeffgen.c}
+  \subsubsection{fft\/recombsim.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/recombsim.c}
+  \subsubsection{fft\/sumbins.c}
+	 \lstinputlisting[language=C]{../kanto_tools/fft/sumbins.c}
+  \subsubsection{sdcard\/crc7\_calc.c}
+	 \lstinputlisting[language=C]{../kanto_tools/sdcard/crc7_calc.c}
+  \subsubsection{sdcard\/pcm2text.c}
+	 \lstinputlisting[language=C]{../kanto_tools/sdcard/pcm2text.c}
+  \subsubsection{sdcard\/testdata.c}
+	 \lstinputlisting[language=C]{../kanto_tools/sdcard/testdata.c}
+  \subsubsection{sdcard\/text2pcm.c}
+	 \lstinputlisting[language=C]{../kanto_tools/sdcard/text2pcm.c}
+
  \subsection{Python} %should we include python scripts to generate things? eh
+  \subsubsection{fft\/inputgen.py}
+	 \lstinputlisting[language=Python]{../kanto_tools/fft/inputgen.py}
+  \subsubsection{fft\/plot.py}
+	 \lstinputlisting[language=Python]{../kanto_tools/fft/plot.py}
+  \subsubsection{roms\/arraygen.py}
+	 \lstinputlisting[language=Python]{../kanto_tools/roms/arraygen.py}
+  \subsubsection{roms\/mifgen.py}
+	 \lstinputlisting[language=Python]{../kanto_tools/roms/mifgen.py}
+  \subsubsection{sdcard\/mkauimg.py}
+	 \lstinputlisting[language=Python]{../kanto_tools/sdcard/mkauimg.py}
  
 \end{document}
