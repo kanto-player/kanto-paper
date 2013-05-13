@@ -222,12 +222,20 @@ SD cards support three communication protocols: SPI bus mode, 1-bit SD bus
 mode, and 4-bit SD bus mode. Our implementation uses the SPI bus, which is the
 simplest; the controller acts as the master device, and the SD card acts as a
 single slave.  The signals on the SPI bus are:
+
 \begin{itemize}
 	\item SCLK - clock, controlled by the master
 	\item MOSI - master out, slave in
 	\item MISO - master in, slave out
-	\item CS' - chip select (active low)
+	\item CS - chip select (active low)
 \end{itemize}
+
+The controller communicates with the SD card by sending commands over SPI.
+The controller must first send a sequence of commands to initialize the SD card.
+Once the SD card is initialized and ready, the controller waits for a signal
+telling it to perform a read. Once the signal is sent, the controller sends
+the read command with the SD card block address as argument and then reads
+the response from the SD card.
 
 \subsubsection{SD Card Data Formatting}
 
