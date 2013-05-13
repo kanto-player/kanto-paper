@@ -43,6 +43,17 @@ actual audio output and FFT visualization. }
 \section{System Architecture}
 
 \subsection{High-Level Overview}
+The following is a high-level overview for playing music and displaying visualizations using an Altera DE2 Cyclone FPGA.
+\begin{itemize}
+	\item Data for the music is stored on the SD card in a time-domain format. When the FPGA starts up, SD Controller peripheral performs a series of initialization steps to prepare the SD card for processing. Once the SD card is ready, a signal is sent to the Conductor so that some cool stuff can start to unfold.
+	\item The Conductor peripheral, along with the NIOS peripheral, controls how and when data flows between ever other peripheral. When the Conductor receives the ready signal from the SD Controller, the Conductor transfers control of the system to the NIOS so that software initialization can occur. 
+	\item The first time that the NIOS gains control, it sets up a track table in block ram based on offsets associated with each file on the SD card. This table places the individual music files in an array, which allows the user to easily switch between tracks. After, NIOS seeks the first track, reads the first block of memory, and gives system control back to the Conductor. The Conductor then loads this data into BLOCK RAM for the Audio Buffer and FFT peripherals to use later. 
+	\item This switching between the NIOS and Conductor mainly serves to allow the user to stop/play or skip tracks by pressing one of the FPGA's on board buttons whenever the system under the NIOS's control. Since the NIOS dictates where memory is being read, we can easily use it to skip around memory blocks on the SD card.
+	\item Audio Buffer operates on two blocks of memory in the BLOCK RAM. At any given time, the Audio Buffer is reading data from BLOCK RAM while data is being written to BLOCK RAM. When data is read, it is then outputted as audible signal. The next block of data is already written by the time the current audio data is finished being read. The buffer then reads from the newly completed block and new data is written over the old data that was read in the previous block.
+	\item The FFT takes the same blocks of data that the Audio Buffer uses and performs a 256-point FFT. The FFT converts the time-domain data to frequency domain-domain data and stores it in block RAM.
+	\item The Visualizer peripheral is used to display the frequencies calculated by the FFT visually. Since humans can only hear certain frequencies, the Visualizer isolates and only displays the frequencies detectable to the human ear, in this case the first 32 frequencies of the 256 calculated by the FFT.
+	\item When the Audio Buffer, FFT, and Visualizer are done with the current block of memory, the Conductor gives system control back to the NIOS and a new block of memory is read. This cycle continues until the end of the SD's memory is reached.
+\end{itemize}
 % include data path
 % block diagram
 
