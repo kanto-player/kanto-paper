@@ -1,3 +1,4 @@
 report.pdf
 *.aux
 *.log
+Makefile
