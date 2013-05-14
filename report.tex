@@ -370,14 +370,14 @@ The conductor unit handles system coordination and communication between modules
 	\item \texttt{cpuctrl} --- In this state, the NIOS system is handling user 
 		interaction. If the signal \texttt{nios\_readblock} is high, the 
 		conductor will trigger read of a single block of data from the SD card
-		by entering the trigger\_write state. Otherwise, if the \texttt{nios\_play} 
+		by entering the trigger\_sd state. Otherwise, if the \texttt{nios\_play} 
 		signal is high, the system can begin or resume audio playback by 
 		transistioning into the resume state. In this condition, the block 
 		address to be read from is incremented.
-	\item \texttt{trigger\_write} --- This state is a transitional state to set
+	\item \texttt{trigger\_sd} --- This state is a transitional state to set
 		sd\_start high for one clock cycle. The conductor immediately 
-		transistions from this state to wait\_write
-	\item \texttt{wait\_write} --- In this state, the module waits until the 
+		transistions from this state to wait\_sd
+	\item \texttt{wait\_sd} --- In this state, the module waits until the 
 		\texttt{sd\_ready} flag is set high, indicating that a block has been 
 		read and control can be returned to the CPU.
 	\item \texttt{resume} --- This state resets the \texttt{fft\_counter} 
