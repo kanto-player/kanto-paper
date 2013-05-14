@@ -430,14 +430,14 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 Interfacing to external hardware like the SD card and the audio codec were by far the 
 most challenging parts of the assignment, mainly because they were difficult to 
 debug. Since proper functionality depended on what the external hardware was 
-doing, we couldn�t reliably use Quartus testbenches like we did for the rest of the 
-components, since our testbenches wouldn�t exactly replicate the behavior of the 
+doing, we couldn't reliably use Quartus testbenches like we did for the rest of the 
+components, since our testbenches wouldn't exactly replicate the behavior of the 
 external hardware. We found that the best way to get interfaces to external hardware 
 working was to base our implementation off of successful existing implementations. 
 For instance, for the audio buffer, we used the components provided for Lab 3 to 
 interface with the audio codec, but modified the files to achieve the correct sampling 
 frequency. For the SD card controller, we based a lot of our code off of the SPI 
-controller from Prof. Edward�s Apple II FPGA project, as well as the SD card driver 
+controller from Prof. Edward's Apple II FPGA project, as well as the SD card driver 
 code in the Linux Kernel. 
 
 \subsection{Changing Parallelism Levels}
@@ -470,19 +470,7 @@ reading data into a separate set of registers and only transferring it to the re
 used by the display processes once the refresh had reached the edge of the screen.  
 This made it possible to reduce flickering that was being seen on the display.
 
-
-\subsection{Design Changes}
-\subsubsection{Removal of SRAM}
-
-In our initial design, we planned on using the SRAM to store the values for the audio 
-buffer and the output of the FFT unit. Separate components would communicate by 
-reading and writing values to the SRAM. We had implemented an SRAM controller 
-with four-phase handshaking to multiplex among the different components. We 
-eventually found, however, that our memory usage did not justify the extra complexity 
-that using SRAM imposed on our design, so we ended up using on-chip block RAM 
-instead.
-
-\subsubsection{Reduction of Hardware Usage}
+\subsection{Reduction of Hardware Usage}
 
 At its peak, our design used up 89\% of the logic elements on the FPGA. We found out 
 that this was because we were accidentally using logic elements instead of block 
@@ -503,7 +491,18 @@ memory requirements, as noted above.
 Having a modular design, both at the highest level and at the level of each
 component, made these changes go relatively smoothly.
 
-\subsubsection{Adding Software Control}
+\section{Design Changes}
+\subsection{Removal of SRAM}
+
+In our initial design, we planned on using the SRAM to store the values for the audio 
+buffer and the output of the FFT unit. Separate components would communicate by 
+reading and writing values to the SRAM. We had implemented an SRAM controller 
+with four-phase handshaking to multiplex among the different components. We 
+eventually found, however, that our memory usage did not justify the extra complexity 
+that using SRAM imposed on our design, so we ended up using on-chip block RAM 
+instead.
+
+\subsection{Adding Software Control}
 
 Initially, our design was implemented entirely in hardware, as we found our control 
 scheme wasn�t complex enough to require software. However, in order to satisfy the 
@@ -512,7 +511,7 @@ software to coordinate the initialization of our system, as well as track switch
 have the hardware controller (the conductor) take over when the audio is actually 
 playing. 
 
-\subsubsection{Display Changes}
+\subsection{Display Changes}
 
 After connecting the FFT and visualizer units together, we determined the visualizer 
 would be more aesthetically pleasing if we isolated and displayed only the 
