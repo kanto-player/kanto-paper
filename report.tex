@@ -741,12 +741,17 @@ more improvements and new features that could be implemented:
 	displaying bars for each frequency. Having a more interesting visualization 
 	would vastly improve the "coolness" factor of our project.
 	\item It would be convenient if we changed the SD card format from our custom 
-	format to a \textbf{standard FAT filesystem}. This would make it easier for the user to 
-	add songs to the SD card, as they could simply copy audio files to the filesystem 
-	instead of having to use custom tools for converting the data and writing it to the 
-	block device.
-	\item 
+	format to a \textbf{standard FAT filesystem}. This would make it easier for the 
+	user to add songs to the SD card, as they could simply copy audio files to the 
+	filesystem instead of having to use custom tools for converting the data and 
+	writing it to the block device.
+	\item A few areas of our code still contain sub-optimal hardware
+	implementations (for instance, if-loops which may have been better written
+	as state diagrams). Cleaning up our hardware implementation for a more
+	optimized use of logical elements is critical for future work with this system.
 \end{enumerate}
+\subsection{Acknowledgements}
+The team would like to thank Professor Stephen Edwards our TA Stephen Pratt for all their guidance and support in our Embedded Systems journey. Also, additional thanks go out to Luis Pe\~{n}a, for being cool, man.
 
 \newpage
 \appendix
