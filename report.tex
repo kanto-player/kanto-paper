@@ -347,6 +347,13 @@ as well as written to a set of seven-segment displays. If one of the track
 switch buttons is pressed, the program takes control away from the conductor,
 changes the block address to the start of the new track, reads in that block,
 and then returns control to the conductor.
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=2in]{track_table_diagram}
+  \caption{Visual representation of the track table created by the \texttt{NIOS} 
+component.}
+\end{figure}
+
 \subsection{Miscellaneous Controller Components}
 \subsubsection{The Conductor}
 The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
@@ -729,14 +736,17 @@ and \texttt{Github Organizations} to manage our repositories of project code.
 
 Although all the initial project goals have been accomplished, there are always 
 more improvements and new features that could be implemented: 
-For instance, the visualization could be made more complex than simply 
-displaying bars for each frequency. Having a more interesting visualization 
-would vastly improve the "coolness" factor of our project. Another possible 
-improvement would be to change the SD card format from our custom format to a 
-standard FAT filesystem. This would make it easier for the user to add songs to 
-the SD card, as they could simply copy audio files to the filesystem instead of 
-having to use custom tools for converting the data and writing it to the block 
-device.
+\begin{enumerate}
+	\item The \textbf{visualization could be made more complex} than simply 
+	displaying bars for each frequency. Having a more interesting visualization 
+	would vastly improve the "coolness" factor of our project.
+	\item It would be convenient if we changed the SD card format from our custom 
+	format to a \textbf{standard FAT filesystem}. This would make it easier for the user to 
+	add songs to the SD card, as they could simply copy audio files to the filesystem 
+	instead of having to use custom tools for converting the data and writing it to the 
+	block device.
+	\item 
+\end{enumerate}
 
 \newpage
 \appendix
