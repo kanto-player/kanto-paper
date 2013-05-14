@@ -331,12 +331,6 @@ were made so that new data is only read in when data is not being drawn to the s
 	\includegraphics[width=4in]{viz_block_diagram}
 	\caption{Block diagram of \texttt{Visualizer} unit.}
 \end{figure}
-% timing diagram
-% test benches if available
-
-% state diagram
-% timing diagram
-% test benches if available
 
 \subsection{Software User Interface}
 This project was initially created using only hardware components. The NIOS entity was added later in order to give the project additional functionality. In main.c, NIOS seeks out the first block of readable data on the SD card. From here, NIOS sets up a track table in block ram based on offsets associated with each file on the SD card. This table places the individual music files in an array, which allows the user to easily switch between tracks. In order to stop, play, or switch a track, NIOS checks to see if one of the relevant Altera board buttons is pressed. If a skip track button is pressed, NIOS calculates a new read address based on the track table. If a stop/play button is pressed, NIOS takes system control away from the conductor and halts/continues the reading of data by the Conductor. After, NIOS gives system control back to the conductor. 
