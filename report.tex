@@ -506,28 +506,53 @@ frequencies detectable to the human ear, in this case the first 32 frequencies o
 256 calculated by the FFT.  Another aesthetic change made was to provide the user 
 with the capability of changing the color of the visualization.
 
-\subsection{Testing Methodology}
+\section{Testing Methodology}
 
-\subsubsection{Testbenches}
+Testing proved to be helpful in isolating and fixing bugs before introducing
+modules into the system. For computational units and controllers, testing was
+done through simulations and assertions; for peripherals, testing was done by
+using test drivers and observing the peripherals behavior. The following
+sections provide a brief overview of our testing procedures for major
+components.
 
-Testbenches were invaluable in insuring correct behavior of components before
-we introduced them into the system. For example, the entire FFT algorithm  was
-first implemented in software (in the C language) before hardware development
-began. Then, the FFT of a given test sample was computed in software. This was
-compared to the hardware output to check for consistency. Surprisingly, the
-initial issues bugs were in the software, and not the hardware.
+\subsection{FFT Controller}
 
-A similar testbench was run on the conductor. We simulated the other system
-components and made sure that the conductor could manage them properly.
+The FFT algorithm was implemented in C early on. A sample input was run through
+the software FFT to generate a corresponding output, and we tested by comparing
+this output to the output generated in hardware given the same input. As we
+modified the FFT (for instance, to reduce parallelism and use block ram), we
+continually tested against this sample to make sure the hardware was still
+mathematically correct.
 
-\subsubsection{Peripheral Testing}
+\subsection{Visualizer}
 
-Much of our project involved interfacing with peripherals. This made simulation
-testbenching impossible. We instead wrote simple test drivers in VHDL and
-observed their behaviors. For example, the visualizer was tested by inputting
-preset levels and making sure they displayed properly on the screen; the SD
-card controller was known by block-level writing known data to the SD card and
-making sure that the correct data was read.
+The two major tests of correctness for the visualizer were 1) displaying each
+of the bars at the correct height; and 2) quickly refreshing the screen when
+the registers were updated. To test this, we wrote a hardware driver that set
+the bars at two different levels and flipped back and forth between them while
+we observed the changes on the VGA monitor.
+
+\subsection{Audio Buffer}
+
+The audio buffer needed to produce a clean sound with no crackling. This tested
+by writing in a sine wave and listening to the output. Additionally, a
+simulation testbench was used to ensure that swapping between the two buffers
+was properly synchronized.
+
+\subsection{SD Card Controller}
+
+We tested the SD card controller by block level writing known data onto an SD
+card and ensuring that the same data was read back. Because there are numerous
+intermediate steps in communicating with an SD card, various LEDs and 7-segment
+displays indicate the current state of the state machine, allowing us to see
+where commands have failed.
+
+\subsection{Conductor}
+
+The conductor is the glue that holds all the components together. We emulated
+the system components in a testbench and simulated the signals they would
+output; using assertions, we confirmed that the conductor was correctly timing
+the interactions between components.
 
 \section{Reflections \& Prospectus}
 
