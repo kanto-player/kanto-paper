@@ -42,6 +42,21 @@
 	\includegraphics[width=4in]{audio-buffer}
 \end{frame}
 
+\begin{frame}{FFT Equations}
+	\begin{equation}
+		X_k = \sum_{n=0}^{N-1} x_n e^{-\frac{2\pi j}{N} nk}
+	\end{equation}
+	\begin{equation}
+		X_k = \left\{
+		\begin{matrix}
+			E_k + e^{-\frac{2\pi j}{N}k} O_k		& 	\mbox{if } k < N/2 \\ 
+			E_{k-N/2} - e^{-\frac{2\pi j}{N} (k-N/2)} O_{k-N/2} & 	\mbox{if }
+			k \geq N/2. 
+		\end{matrix} 
+		\right.
+	\end{equation}
+\end{frame}
+
 \begin{frame}{FFT Top-Level}
 	\centering
 	\includegraphics[width=4in]{fft-top}
