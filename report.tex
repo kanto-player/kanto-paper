@@ -354,12 +354,38 @@ and then returns control to the conductor.
 \subsubsection{The Conductor}
 The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
 \begin{itemize}
-\item \texttt{initial} --- When the system starts up, the conductor begins in the \texttt{initial} state. It immediately hands off control to the NIOS system for system initialization and playback control in the \texttt{cpuctrl} state.
-\item \texttt{cpuctrl} --- In this state, the NIOS system is handling user interaction. If the signal \texttt{nios\_readblock} is high, this indicates the metadata block has been read, and the system can copy a block of audio from the SD card. Otherwise, if the \texttt{nios\_play} signal is high, the system can begin or resume audio playback. In this condition, the block address to be read from is incremented.
-\item \texttt{trigger\_write} --- This state is a placeholder state to allow a buffer clock cycle so the \texttt{sd\_ready} signal is given time to propagate through to the \texttt{Conductor}.
-\item \texttt{wait\_write} --- In this state, the module waits until the \texttt{sd\_ready} flag is set high, indicating that a block has been read and control can be returned to the CPU.
-\item \texttt{resume} --- This state resets the \texttt{fft\_counter} signal before audio playback begins.
-\item \texttt{playing} --- This state handles audio buffer switching and tells the SD card to read blocks as the audio buffer and FFT iterate through them. 
+	\item \texttt{initial} --- When the system starts up, the conductor begins 
+		in the \texttt{initial} state. It waits for the SD card to finish 
+		intialization (sd\_ready is high) and then hands off control to the NIOS 
+		system for system initialization and playback control in the 
+		\texttt{cpuctrl} state.
+	\item \texttt{cpuctrl} --- In this state, the NIOS system is handling user 
+		interaction. If the signal \texttt{nios\_readblock} is high, the 
+		conductor will trigger read of a single block of data from the SD card
+		by entering the trigger\_write state. Otherwise, if the \texttt{nios\_play} 
+		signal is high, the system can begin or resume audio playback by 
+		transistioning into the resume state. In this condition, the block 
+		address to be read from is incremented.
+	\item \texttt{trigger\_write} --- This state is a transitional state to set
+		sd\_start high for one clock cycle. The conductor immediately 
+		transistions from this state to wait\_write
+	\item \texttt{wait\_write} --- In this state, the module waits until the 
+		\texttt{sd\_ready} flag is set high, indicating that a block has been 
+		read and control can be returned to the CPU.
+	\item \texttt{resume} --- This state resets the \texttt{fft\_counter} 
+		signal to 0 before audio playback begins.
+	\item \texttt{playing} --- This state is the default state when playback
+		is occurring. Depending on the status signals, the conductor could
+		switch into block\_end or fft\_end. If nios\_play is set low, the
+		conductor switches to the \texttt{initial} state to return the SD card 
+		to CPU control.
+	\item \texttt{block\_end} --- The conductor enters this state for one
+		clock cycle after the audio buffer switches buffers. It triggers a 
+		read from the SD card and, on every fourth block, triggers the FFT.
+		The conductor also increments the SD card block address.
+	\item \texttt{fft\_end} --- The conductor enters this state when the FFT
+		unit finishes computing (fft\_done changes from low to high). In this
+		state, the visualizer reset is triggered.
 \end{itemize}
 \begin{figure}[H]
   \centering
