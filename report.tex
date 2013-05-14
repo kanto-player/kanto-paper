@@ -65,7 +65,7 @@ on a VGA display, similar to the visualization on classic music players. Our
 implementation uses hardware to handle audio output and frequency
 visualization, and software to handle user interaction and system
 initialization. The user can interact with the system using switches for color
-mixing and buttons for starting and stopping audio playback.
+mixing and buttons for fast forward, rewind, and track selection.
 
 \section{System Architecture}
 
@@ -315,14 +315,18 @@ the screen.  The height of these bars is decided by summing the amplitude of
 the two frequencies contained in the bin and then scaling this value to the 
 necessary height for the screen.
 
-It was necessary to use two different clocks since the VGA display requires a 25.1 MHz clock, in this case a 25 MHz clock as used.  There was no need to read in data on the slower clock and therefore the a 50 MHz clock was used there so as to read the data as quickly as possible. 
+It was necessary to use two different clocks since the VGA display requires a
+25.1 MHz clock. In this case, a 25 MHz clock as used.  There was no need to read
+in data on the slower clock and therefore the 50 MHz clock was used there so
+as to read the data as quickly as possible. 
 
-An additional functionality that was added was the ability to change color of the bars appearing on the screen.  
-Three switches correspond to red, green, and blue and allow the user to mix 
-and match to create different colors.  The switches are active low so the 
-default color when all switches are "off" is the white so as to be seen on the 
-black background.  In order to improve the accuracy of the display adjustments 
-were made so that new data is only read in when data is not being drawn to the screen.
+An additional feature that was added was the ability to change the color of the 
+bars appearing on the screen.  Three switches corresponding to red, green, and 
+blue allow the user to mix and match to create different colors.  The switches 
+are active low so the default color when all switches are "off" is white, so 
+as to be seen on the black background.  In order to improve the accuracy of the 
+display, adjustments were made so that new data is only read in when data is 
+not being drawn to the screen.
 
 \begin{figure}[H]
 	\centering
@@ -401,7 +405,12 @@ The conductor unit handles system coordination and communication between modules
 \end{figure}
 
 \subsubsection{Phase-Locked Loop for Multiple Clocks}
-The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and an 11.29MHz clock for the audio output.
+The visualizer unit and audio playback required different clocks to drive their
+respective peripherals, but also required clocks to synchronize communication
+with other modules in the kanto system. To most easily configure these clocks,
+a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL
+was used to generate a 50MHz clock for general system synchronization, a 25MHz
+clock to drive the VGA display, and an 11.29MHz clock for the audio output.
 
 \section{Design Changes}
 \subsection{Removal of SRAM}
@@ -459,15 +468,15 @@ we observed the changes on the VGA monitor.
 
 \subsection{Audio Buffer}
 
-The audio buffer needed to produce a clean sound with no crackling. This tested
-by writing in a sine wave and listening to the output. Additionally, a
+The audio buffer needed to produce a clean sound with no crackling. We tested
+this by writing in a sine wave and listening to the output. Additionally, a
 simulation testbench was used to ensure that swapping between the two buffers
 was properly synchronized.
 
 \subsection{SD Card Controller}
 
-We tested the SD card controller by block level writing known data onto an SD
-card and ensuring that the same data was read back. Because there are numerous
+We tested the SD card controller by writing known data onto an SD card and 
+ensuring that the same data was read back. Because there are numerous
 intermediate steps in communicating with an SD card, various LEDs and 7-segment
 displays indicate the current state of the state machine, allowing us to see
 where commands have failed.
@@ -476,7 +485,7 @@ where commands have failed.
 
 The conductor is the glue that holds all the components together. We emulated
 the system components in a testbench and simulated the signals they would
-output; using assertions, we confirmed that the conductor was correctly timing
+output. Using assertions, we confirmed that the conductor was correctly timing
 the interactions between components.
 
 \section{Timeline \& Milestone Progress}
