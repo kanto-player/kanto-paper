@@ -333,7 +333,23 @@ were made so that new data is only read in when data is not being drawn to the s
 \end{figure}
 
 \subsection{Software User Interface}
-This project was initially created using only hardware components. The NIOS entity was added later in order to give the project additional functionality. In main.c, NIOS seeks out the first block of readable data on the SD card. From here, NIOS sets up a track table in block ram based on offsets associated with each file on the SD card. This table places the individual music files in an array, which allows the user to easily switch between tracks. In order to stop, play, or switch a track, NIOS checks to see if one of the relevant Altera board buttons is pressed. If a skip track button is pressed, NIOS calculates a new read address based on the track table. If a stop/play button is pressed, NIOS takes system control away from the conductor and halts/continues the reading of data by the Conductor. After, NIOS gives system control back to the conductor. 
+
+This project was initially created using only hardware components. The NIOS 
+entity was added later in order to give the project additional functionality. 
+At startup, the software reads in the first block of data from the SD card. 
+This first block contains 32-bit numbers which are the block addresses of the 
+beginning of each song on the SD card. If there are fewer than 128 songs on the 
+SD card, the remaining words in the block will be set to 0. The last non-zero 
+word in the track table is the end of the last track. Once intialization is
+finished, the NIOS software hands control over the system to the hardware
+conductor. It then goes into a loop in which it polls the current block address
+and the state of the push buttons. If the current block address goes over the 
+first block address of the next track, the track number is updated internally
+as well as written to a set of seven-segment displays. If one of the track 
+switch buttons is pressed, the program takes control away from the conductor,
+changes the block address to the start of the new track, reads in that block,
+and then returns control to the conductor.
+
 \subsection{Miscellaneous Controller Components}
 \subsubsection{The Conductor}
 The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
