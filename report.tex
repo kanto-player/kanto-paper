@@ -161,7 +161,7 @@ the response from the SD card.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=4in]{sd-controller}
-	\caption{Flowchart of control signals needed sent by the \texttt{SD Card Controller}. }
+	\caption{Flowchart of the commands sent by the \texttt{SD Card Controller}. }
 \end{figure}
 
 \subsubsection{SD Card Data Formatting}
@@ -350,7 +350,7 @@ and then returns control to the conductor.
 \begin{figure}[H]
   \centering
     \includegraphics[width=2in]{track_table_diagram}
-  \caption{Visual representation of the track table created by the \texttt{NIOS} 
+  \caption{Visual representation of the track table used by the \texttt{NIOS} 
 component.}
 \end{figure}
 
@@ -390,6 +390,7 @@ The conductor unit handles system coordination and communication between modules
 	\item \texttt{fft\_end} --- The conductor enters this state when the FFT
 		unit finishes computing (fft\_done changes from low to high). In this
 		state, the visualizer reset is triggered.
+
 \end{itemize}
 \begin{figure}[H]
   \centering
@@ -398,6 +399,7 @@ The conductor unit handles system coordination and communication between modules
     Mealy machine, using abstract transition descriptions and omitting unused
     signals for compactness. \(\widetilde{}\)   denotes a lack of outputs}
 \end{figure}
+
 \subsubsection{Phase-Locked Loop for Multiple Clocks}
 The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and an 11.29MHz clock for the audio output.
 
