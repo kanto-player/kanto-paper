@@ -328,7 +328,7 @@ song, as discussed earlier, are contained in the metadata block.
 % test benches if available
 
 \subsection{Software User Interface}
-
+This project was initially created using only hardware components. The NIOS entity was added later in order to give the project additional functionality. In main.c, NIOS seeks out the first block of readable data on the SD card. From here, NIOS sets up a track table in block ram based on offsets associated with each file on the SD card. This table places the individual music files in an array, which allows the user to easily switch between tracks. In order to stop, play, or switch a track, NIOS checks to see if one of the relevant Altera board buttons is pressed. If a skip track button is pressed, NIOS calculates a new read address based on the track table. If a stop/play button is pressed, NIOS takes system control away from the conductor and halts/continues the reading of data by the Conductor. After, NIOS gives system control back to the conductor. 
 \subsection{Miscellaneous Controller Components}
 \subsubsection{The Conductor}
 The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
@@ -416,14 +416,14 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 Interfacing to external hardware like the SD card and the audio codec were by far the 
 most challenging parts of the assignment, mainly because they were difficult to 
 debug. Since proper functionality depended on what the external hardware was 
-doing, we couldnÕt reliably use Quartus testbenches like we did for the rest of the 
-components, since our testbenches wouldnÕt exactly replicate the behavior of the 
+doing, we couldnï¿½t reliably use Quartus testbenches like we did for the rest of the 
+components, since our testbenches wouldnï¿½t exactly replicate the behavior of the 
 external hardware. We found that the best way to get interfaces to external hardware 
 working was to base our implementation off of successful existing implementations. 
 For instance, for the audio buffer, we used the components provided for Lab 3 to 
 interface with the audio codec, but modified the files to achieve the correct sampling 
 frequency. For the SD card controller, we based a lot of our code off of the SPI 
-controller from Prof. EdwardÕs Apple II FPGA project, as well as the SD card driver 
+controller from Prof. Edwardï¿½s Apple II FPGA project, as well as the SD card driver 
 code in the Linux Kernel. 
 
 \subsection{Changing Parallelism Levels}
@@ -444,13 +444,13 @@ Timing issues can be a big problem in a complex design, especially if external
 hardware is involved, as different hardware peripherals require different clocks. For 
 our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz clock, 
 and the SD card used a 6.25 MHz clock. We used a PLL for the first two and clock 
-enables for the last one (since the SD card clock wasnÕt always running). But passing 
+enables for the last one (since the SD card clock wasnï¿½t always running). But passing 
 status and control signals between units running on different clocks ended up being a 
 minor challenge as well. We ended up solving this problem by either stretching the 
 signals or detecting the rising edge of signals. 
 
 Because the operations of reading in VGA data and refreshing the VGA display both 
-took more than one cycle meant that we needed to ensure that the data wasnÕt being 
+took more than one cycle meant that we needed to ensure that the data wasnï¿½t being 
 changed while the display was in the middle of refreshing. This was accomplished by 
 reading data into a separate set of registers and only transferring it to the registers 
 used by the display processes once the refresh had reached the edge of the screen.  
@@ -492,7 +492,7 @@ component, made these changes go relatively smoothly.
 \subsubsection{Adding Software Control}
 
 Initially, our design was implemented entirely in hardware, as we found our control 
-scheme wasnÕt complex enough to require software. However, in order to satisfy the 
+scheme wasnï¿½t complex enough to require software. However, in order to satisfy the 
 requirements for the class, we had to add a software component. We decided to use 
 software to coordinate the initialization of our system, as well as track switching, and 
 have the hardware controller (the conductor) take over when the audio is actually 
