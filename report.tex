@@ -127,8 +127,6 @@ visualizations using an Altera DE2 Cyclone FPGA.
 		When the \texttt{FFT} unit is done, the conductor triggers the visualizer to
 		refresh the display.
 \end{itemize}
-% include data path
-% block diagram
 \section{Design Implementation}
 
 \subsection{SD Card Controller}
@@ -340,7 +338,7 @@ At startup, the software reads in the first block of data from the SD card.
 This first block contains 32-bit numbers which are the block addresses of the 
 beginning of each song on the SD card. If there are fewer than 128 songs on the 
 SD card, the remaining words in the block will be set to 0. The last non-zero 
-word in the track table is the end of the last track. Once intialization is
+word in the track table is the end of the last track. Once initialization is
 finished, the NIOS software hands control over the system to the hardware
 conductor. It then goes into a loop in which it polls the current block address
 and the state of the push buttons. If the current block address goes over the 
@@ -349,7 +347,6 @@ as well as written to a set of seven-segment displays. If one of the track
 switch buttons is pressed, the program takes control away from the conductor,
 changes the block address to the start of the new track, reads in that block,
 and then returns control to the conductor.
-
 \subsection{Miscellaneous Controller Components}
 \subsubsection{The Conductor}
 The conductor unit handles system coordination and communication between modules, and is the primary controller unit for the system. Typical system operation and data flow within the module is as follows:
@@ -539,20 +536,23 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 
 \subsection{Interfacing to External Hardware}
 
-Interfacing to external hardware like the SD card and the audio codec were by far the 
-most challenging parts of the assignment, mainly because they were difficult to 
-debug. Since proper functionality depended on what the external hardware was 
-doing, we couldn't reliably use Quartus testbenches like we did for the rest of the 
-components, since our testbenches wouldn't exactly replicate the behavior of the 
+Interfacing to external hardware, such as the SD card, audio codec, and VGA display, 
+was by far the most challenging parts of the assignment, mainly because it was
+difficult to debug. Since proper functionality depended on what the external hardware 
+was doing, we couldn't reliably use Quartus testbenches like we did for the rest of the 
+components, since our testbenches couldn't exactly replicate the behavior of the 
 external hardware. We found that the best way to get interfaces to external hardware 
 working was to base our implementation off of successful existing implementations. 
 For instance, for the audio buffer, we used the components provided for Lab 3 to 
 interface with the audio codec, but modified the files to achieve the correct sampling 
 frequency. For the SD card controller, we based a lot of our code off of the SPI 
 controller from Prof. Edward's Apple II FPGA project, as well as the SD card driver 
-code in the Linux Kernel. 
+code in the Linux Kernel. For the visualizer, we initially based our work on 
+components from Lab 3, but quickly found we needed more advanced functionality 
+than the examples provided. For debugging the visualizer, we resorted to driving the 
+LEDs and 7-segment displays for feedback on states and data.
 
-\subsection{Changing Parallelism Levels}
+\subsection{Changing Levels of Parallelism}
 
 Because of the extensive parallelism in the FFT module, it became difficult to fit the 
 entire system on the FPGA, and we had to reduce the amount of parallelism in the 
@@ -570,13 +570,13 @@ Timing issues can be a big problem in a complex design, especially if external
 hardware is involved, as different hardware peripherals require different clocks. For 
 our design, the audio codec used a 11.29 MHz clock, the VGA used a 25 MHz clock, 
 and the SD card used a 6.25 MHz clock. We used a PLL for the first two and clock 
-enables for the last one (since the SD card clock wasn�t always running). But passing 
+enables for the last one (since the SD card clock wasn' always running). But passing 
 status and control signals between units running on different clocks ended up being a 
 minor challenge as well. We ended up solving this problem by either stretching the 
 signals or detecting the rising edge of signals. 
 
 Because the operations of reading in VGA data and refreshing the VGA display both 
-took more than one cycle meant that we needed to ensure that the data wasn�t being 
+took more than one cycle meant that we needed to ensure that the data wasn't being 
 changed while the display was in the middle of refreshing. This was accomplished by 
 reading data into a separate set of registers and only transferring it to the registers 
 used by the display processes once the refresh had reached the edge of the screen.  
@@ -602,6 +602,82 @@ memory requirements, as noted above.
 
 Having a modular design, both at the highest level and at the level of each
 component, made these changes go relatively smoothly.
+
+\section{Design Changes}
+\subsection{Removal of SRAM}
+
+In our initial design, we planned on using the SRAM to store the values for the audio 
+buffer and the output of the FFT unit. Separate components would communicate by 
+reading and writing values to the SRAM. We had implemented an SRAM controller 
+with four-phase handshaking to multiplex among the different components. We 
+eventually found, however, that our memory usage did not justify the extra complexity 
+that using SRAM imposed on our design, so we ended up using on-chip block RAM 
+instead.
+
+\subsection{Adding Software Control}
+
+Initially, our design was implemented entirely in hardware, as we found our control 
+scheme wasn't complex enough to require software. However, in order to satisfy the 
+requirements for the class, we had to add a software component. We decided to use 
+software to coordinate the initialization of our system, as well as track switching, and 
+have the hardware controller (the conductor) take over when the audio is actually 
+playing. 
+
+\subsection{Display Changes}
+
+After connecting the FFT and visualizer units together, we determined the visualizer 
+would be more aesthetically pleasing if we isolated and displayed only the 
+frequencies detectable to the human ear, in this case the first 32 frequencies of the 
+256 calculated by the FFT.  Another aesthetic change made was to provide the user 
+with the capability of changing the color of the visualization.
+
+\section{Testing Methodology}
+
+Testing proved to be helpful in isolating and fixing bugs before introducing
+modules into the system. For computational units and controllers, testing was
+done through simulations and assertions; for peripherals, testing was done by
+using test drivers and observing the peripherals behavior. The following
+sections provide a brief overview of our testing procedures for major
+components.
+
+\subsection{FFT Controller}
+
+The FFT algorithm was implemented in C early on. A sample input was run through
+the software FFT to generate a corresponding output, and we tested by comparing
+this output to the output generated in hardware given the same input. As we
+modified the FFT (for instance, to reduce parallelism and use block ram), we
+continually tested against this sample to make sure the hardware was still
+mathematically correct.
+
+\subsection{Visualizer}
+
+The two major tests of correctness for the visualizer were 1) displaying each
+of the bars at the correct height; and 2) quickly refreshing the screen when
+the registers were updated. To test this, we wrote a hardware driver that set
+the bars at two different levels and flipped back and forth between them while
+we observed the changes on the VGA monitor.
+
+\subsection{Audio Buffer}
+
+The audio buffer needed to produce a clean sound with no crackling. This tested
+by writing in a sine wave and listening to the output. Additionally, a
+simulation testbench was used to ensure that swapping between the two buffers
+was properly synchronized.
+
+\subsection{SD Card Controller}
+
+We tested the SD card controller by block level writing known data onto an SD
+card and ensuring that the same data was read back. Because there are numerous
+intermediate steps in communicating with an SD card, various LEDs and 7-segment
+displays indicate the current state of the state machine, allowing us to see
+where commands have failed.
+
+\subsection{Conductor}
+
+The conductor is the glue that holds all the components together. We emulated
+the system components in a testbench and simulated the signals they would
+output; using assertions, we confirmed that the conductor was correctly timing
+the interactions between components.
 
 \section{Reflections \& Prospectus}
 
@@ -652,7 +728,7 @@ and \texttt{Github Organizations} to manage our repositories of project code.
 \subsection{Optimizations \& Improvements}
 
 Although all the initial project goals have been accomplished, there are always 
-more improvements and new features that could be implemented.
+more improvements and new features that could be implemented: 
 For instance, the visualization could be made more complex than simply 
 displaying bars for each frequency. Having a more interesting visualization 
 would vastly improve the "coolness" factor of our project. Another possible 
