@@ -130,11 +130,81 @@ visualizations using an Altera DE2 Cyclone FPGA.
 % include data path
 % block diagram
 \section{Design Implementation}
+
+\subsection{SD Card Controller}
+
+The SD card controller is responsible for initializing the SD card's own
+built-in controller, sending read commands to the SD card as necessary, and
+receiving the data and writing it to the audio buffer.  It takes as inputs the
+global clock and a 32-bit SD block address to read, and it sends write data,
+write address, and write enable to the audio buffer.
+
+\subsubsection{SPI Bus Protocol}
+
+SD cards support three communication protocols: SPI bus mode, 1-bit SD bus
+mode, and 4-bit SD bus mode. Our implementation uses the SPI bus, which is the
+simplest; the controller acts as the master device, and the SD card acts as a
+single slave.  The signals on the SPI bus are:
+
+\begin{itemize}
+	\item \texttt{SCLK} - clock, controlled by the master
+	\item \texttt{MOSI} - master out, slave in
+	\item \texttt{MISO} - master in, slave out
+	\item \texttt{CS} - chip select (active low)
+\end{itemize}
+
+The controller communicates with the SD card by sending commands over SPI.
+The controller must first send a sequence of commands to initialize the SD card.
+Once the SD card is initialized and ready, the controller waits for a signal
+telling it to perform a read. Once the signal is sent, the controller sends
+the read command with the SD card block address as argument and then reads
+the response from the SD card.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=4in]{sd-controller}
+	\caption{Flowchart of control signals needed sent by the \texttt{SD Card Controller}. }
+\end{figure}
+
+\subsubsection{SD Card Data Formatting}
+
+Support for standard filesystems is not implemented. However, there is support
+for multiple song files. SD cards are addressed as 512-byte blocks. As such,
+the first 512 bytes of the SD card is dedicated to metadata - it contains the
+start addresses for each song on the SD card.
+
+The songs themselves are in 16-bit raw PCM format, written to the SD card end
+to end and aligned to 512 byte boundaries. The start addresses of each
+song, as discussed earlier, are contained in the metadata block.
+
+\subsection{Audio Buffer}
+
+The audio buffer controls playback of the audio data. It contains a RAM
+holding 512 16-bit values and a unit that speaks to the Wolfson WM8731
+audio codec on the DE2 board.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=4in]{audio-buffer}
+	\caption{High-level block diagram of the \texttt{Audio Buffer} unit.}
+\end{figure}
+
+The audio codec interface reads in a 16-bit sample from the audio RAM and
+transmits the bits serially to the audio codec. Once the last bit has been
+transmitted, the next sample is requested from the audio RAM.
+
+The audio RAM is effectively split in two so that the audio codec interface
+plays samples from one half while the SD card writes to the other. This is
+the reason why the RAM is chosen to hold 512 samples, since one SD card
+block is 512 bytes, or 256 samples. Once the audio codec interface plays 
+sample 255 or 511 (indexed from 0), it sends a signal indicating that the 
+SD card controller should read in another block.
+
 \subsection{FFT Unit}
+
 The \texttt{FFT} unit is used to compute the discrete frequency transform of a set of 
 audio samples to be visualized. 
 
-\subsubsection{Fast Fourier Transform Algorithm}
 We use the basic Cooley-Tukey FFT algorithm with a radix of 16 to compute the
 frequency transform of a given sample. The number of frequencies \(N\) computed by 
 the FFT was chosen to be 256. The radix size and number of frequencies were chosen 
@@ -161,10 +231,6 @@ following equation for each stage:
 	\end{matrix} 
 	\right.
 \end{equation}
-
-The resulting output is 256 frequency values.
-
-\subsubsection{Block Diagrams}
 
 The FFT hardware consists of two types of pipelines, one for the DFT,
 and another for the recombination. 
@@ -235,29 +301,6 @@ The multipliers used in this design all use the dedicated multiplier
 circuitry on the Cyclone II. All RAMs and ROMs use the dual-port M4K
 block RAM.
 	
-\subsection{Audio Buffer}
-
-The audio buffer controls playback of the audio data. It contains a RAM
-holding 512 16-bit values and a unit that speaks to the Wolfson WM8731
-audio codec on the DE2 board.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=4in]{audio-buffer}
-	\caption{High-level block diagram of the \texttt{Audio Buffer} unit.}
-\end{figure}
-
-The audio codec interface reads in a 16-bit sample from the audio RAM and
-transmits the bits serially to the audio codec. Once the last bit has been
-transmitted, the next sample is requested from the audio RAM.
-
-The audio RAM is effectively split in two so that the audio codec interface
-plays samples from one half while the SD card writes to the other. This is
-the reason why the RAM is chosen to hold 512 samples, since one SD card
-block is 512 bytes, or 256 samples. Once the audio codec interface plays 
-sample 255 or 511 (indexed from 0), it sends a signal indicating that the 
-SD card controller should read in another block.
-
 \subsection{Visualizer} 
 
 There are two main tasks that the vizualizer needs to accomplish.  
@@ -291,52 +334,6 @@ were made so that new data is only read in when data is not being drawn to the s
 % timing diagram
 % test benches if available
 
-\subsection{SD Card Controller}
-
-The SD card controller is responsible for initializing the SD card's own
-built-in controller, sending read commands to the SD card as necessary, and
-receiving the data and writing it to the audio buffer.  It takes as inputs the
-global clock and a 32-bit SD block address to read, and it sends write data,
-write address, and write enable to the audio buffer.
-
-\subsubsection{SPI Bus Protocol}
-
-SD cards support three communication protocols: SPI bus mode, 1-bit SD bus
-mode, and 4-bit SD bus mode. Our implementation uses the SPI bus, which is the
-simplest; the controller acts as the master device, and the SD card acts as a
-single slave.  The signals on the SPI bus are:
-
-\begin{itemize}
-	\item \texttt{SCLK} - clock, controlled by the master
-	\item \texttt{MOSI} - master out, slave in
-	\item \texttt{MISO} - master in, slave out
-	\item \texttt{CS} - chip select (active low)
-\end{itemize}
-
-The controller communicates with the SD card by sending commands over SPI.
-The controller must first send a sequence of commands to initialize the SD card.
-Once the SD card is initialized and ready, the controller waits for a signal
-telling it to perform a read. Once the signal is sent, the controller sends
-the read command with the SD card block address as argument and then reads
-the response from the SD card.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=4in]{sd-controller}
-	\caption{Flowchart of control signals needed sent by the \texttt{SD Card Controller}. }
-\end{figure}
-
-\subsubsection{SD Card Data Formatting}
-
-Support for standard filesystems is not implemented. However, there is support
-for multiple song files. SD cards are addressed as 512-byte blocks. As such,
-the first 512 bytes of the SD card is dedicated to metadata - it contains the
-start addresses for each song on the SD card.
-
-The songs themselves are in 16-bit raw PCM format, written to the SD card end
-to end and aligned to 512 byte boundaries. The start addresses of each
-song, as discussed earlier, are contained in the metadata block.
-
 % state diagram
 % timing diagram
 % test benches if available
@@ -363,6 +360,82 @@ The conductor unit handles system coordination and communication between modules
 \end{figure}
 \subsubsection{Phase-Locked Loop for Multiple Clocks}
 The visualizer unit and audio playback required different clocks to drive their respective peripherals, but also required clocks to synchronize communication with other modules in the kanto system. To most easily configure these clocks, a Phase-Locked Loop (PLL) was generated from an Altera Megafunction. The PLL was used to generate a 50MHz clock for general system synchronization, a 25MHz clock to drive the VGA display, and an 11.29MHz clock for the audio output.
+
+\section{Design Changes}
+\subsection{Removal of SRAM}
+
+In our initial design, we planned on using the SRAM to store the values for the audio 
+buffer and the output of the FFT unit. Separate components would communicate by 
+reading and writing values to the SRAM. We had implemented an SRAM controller 
+with four-phase handshaking to multiplex among the different components. We 
+eventually found, however, that our memory usage did not justify the extra complexity 
+that using SRAM imposed on our design, so we ended up using on-chip block RAM 
+instead.
+
+\subsection{Adding Software Control}
+
+Initially, our design was implemented entirely in hardware, as we found our control 
+scheme wasn�t complex enough to require software. However, in order to satisfy the 
+requirements for the class, we had to add a software component. We decided to use 
+software to coordinate the initialization of our system, as well as track switching, and 
+have the hardware controller (the conductor) take over when the audio is actually 
+playing. 
+
+\subsection{Display Changes}
+
+After connecting the FFT and visualizer units together, we determined the visualizer 
+would be more aesthetically pleasing if we isolated and displayed only the 
+frequencies detectable to the human ear, in this case the first 32 frequencies of the 
+256 calculated by the FFT.  Another aesthetic change made was to provide the user 
+with the capability of changing the color of the visualization.
+
+\section{Testing Methodology}
+
+Testing proved to be helpful in isolating and fixing bugs before introducing
+modules into the system. For computational units and controllers, testing was
+done through simulations and assertions; for peripherals, testing was done by
+using test drivers and observing the peripherals behavior. The following
+sections provide a brief overview of our testing procedures for major
+components.
+
+\subsection{FFT Controller}
+
+The FFT algorithm was implemented in C early on. A sample input was run through
+the software FFT to generate a corresponding output, and we tested by comparing
+this output to the output generated in hardware given the same input. As we
+modified the FFT (for instance, to reduce parallelism and use block ram), we
+continually tested against this sample to make sure the hardware was still
+mathematically correct.
+
+\subsection{Visualizer}
+
+The two major tests of correctness for the visualizer were 1) displaying each
+of the bars at the correct height; and 2) quickly refreshing the screen when
+the registers were updated. To test this, we wrote a hardware driver that set
+the bars at two different levels and flipped back and forth between them while
+we observed the changes on the VGA monitor.
+
+\subsection{Audio Buffer}
+
+The audio buffer needed to produce a clean sound with no crackling. This tested
+by writing in a sine wave and listening to the output. Additionally, a
+simulation testbench was used to ensure that swapping between the two buffers
+was properly synchronized.
+
+\subsection{SD Card Controller}
+
+We tested the SD card controller by block level writing known data onto an SD
+card and ensuring that the same data was read back. Because there are numerous
+intermediate steps in communicating with an SD card, various LEDs and 7-segment
+displays indicate the current state of the state machine, allowing us to see
+where commands have failed.
+
+\subsection{Conductor}
+
+The conductor is the glue that holds all the components together. We emulated
+the system components in a testbench and simulated the signals they would
+output; using assertions, we confirmed that the conductor was correctly timing
+the interactions between components.
 
 \section{Timeline \& Milestone Progress}
 \begin{tabular}{cc|p{7cm}p{3cm}}
@@ -491,82 +564,6 @@ memory requirements, as noted above.
 Having a modular design, both at the highest level and at the level of each
 component, made these changes go relatively smoothly.
 
-\section{Design Changes}
-\subsection{Removal of SRAM}
-
-In our initial design, we planned on using the SRAM to store the values for the audio 
-buffer and the output of the FFT unit. Separate components would communicate by 
-reading and writing values to the SRAM. We had implemented an SRAM controller 
-with four-phase handshaking to multiplex among the different components. We 
-eventually found, however, that our memory usage did not justify the extra complexity 
-that using SRAM imposed on our design, so we ended up using on-chip block RAM 
-instead.
-
-\subsection{Adding Software Control}
-
-Initially, our design was implemented entirely in hardware, as we found our control 
-scheme wasn�t complex enough to require software. However, in order to satisfy the 
-requirements for the class, we had to add a software component. We decided to use 
-software to coordinate the initialization of our system, as well as track switching, and 
-have the hardware controller (the conductor) take over when the audio is actually 
-playing. 
-
-\subsection{Display Changes}
-
-After connecting the FFT and visualizer units together, we determined the visualizer 
-would be more aesthetically pleasing if we isolated and displayed only the 
-frequencies detectable to the human ear, in this case the first 32 frequencies of the 
-256 calculated by the FFT.  Another aesthetic change made was to provide the user 
-with the capability of changing the color of the visualization.
-
-\section{Testing Methodology}
-
-Testing proved to be helpful in isolating and fixing bugs before introducing
-modules into the system. For computational units and controllers, testing was
-done through simulations and assertions; for peripherals, testing was done by
-using test drivers and observing the peripherals behavior. The following
-sections provide a brief overview of our testing procedures for major
-components.
-
-\subsection{FFT Controller}
-
-The FFT algorithm was implemented in C early on. A sample input was run through
-the software FFT to generate a corresponding output, and we tested by comparing
-this output to the output generated in hardware given the same input. As we
-modified the FFT (for instance, to reduce parallelism and use block ram), we
-continually tested against this sample to make sure the hardware was still
-mathematically correct.
-
-\subsection{Visualizer}
-
-The two major tests of correctness for the visualizer were 1) displaying each
-of the bars at the correct height; and 2) quickly refreshing the screen when
-the registers were updated. To test this, we wrote a hardware driver that set
-the bars at two different levels and flipped back and forth between them while
-we observed the changes on the VGA monitor.
-
-\subsection{Audio Buffer}
-
-The audio buffer needed to produce a clean sound with no crackling. This tested
-by writing in a sine wave and listening to the output. Additionally, a
-simulation testbench was used to ensure that swapping between the two buffers
-was properly synchronized.
-
-\subsection{SD Card Controller}
-
-We tested the SD card controller by block level writing known data onto an SD
-card and ensuring that the same data was read back. Because there are numerous
-intermediate steps in communicating with an SD card, various LEDs and 7-segment
-displays indicate the current state of the state machine, allowing us to see
-where commands have failed.
-
-\subsection{Conductor}
-
-The conductor is the glue that holds all the components together. We emulated
-the system components in a testbench and simulated the signals they would
-output; using assertions, we confirmed that the conductor was correctly timing
-the interactions between components.
-
 \section{Reflections \& Prospectus}
 
 Our group is very satisfied with the final version of our project. We accomplished all 
@@ -625,7 +622,8 @@ standard FAT filesystem. This would make it easier for the user to add songs to
 the SD card, as they could simply copy audio files to the filesystem instead of 
 having to use custom tools for converting the data and writing it to the block 
 device.
- 
+
+\newpage
 \appendix
 
 \section{Source Code}
