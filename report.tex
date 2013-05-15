@@ -83,49 +83,42 @@ visualizations using an Altera DE2 Cyclone FPGA.
 \begin{itemize}
 	\item Data for the music is stored on the SD card in a time-domain format.
 		When the FPGA starts up, \texttt{SD Controller} peripheral performs a 
-		series of
-		initialization steps to prepare the SD card for processing. Once the 
-		SD card is ready, a signal is sent to the \texttt{Conductor} so that some cool 
-		stuff can start to unfold.  
-	\item The \texttt{Conductor} peripheral, along with the \texttt{NIOS} peripheral,
-		controls how and when data flows between every other peripheral. 
-		When the \texttt{Conductor} receives the ready signal from the 
-		\texttt{SD Controller}, 
-		the \texttt{Conductor} transfers control of the system to the \texttt{NIOS} so 
-		that 
-		software initialization can occur.  
+		series of initialization steps to prepare the SD card for processing. 
+		Once the SD card is ready, a signal is sent to the \texttt{Conductor} 
+		so that some cool stuff can start to unfold.  
+	\item The \texttt{Conductor} peripheral, along with the \texttt{NIOS} 
+		peripheral, controls how and when data flows between every other 
+		peripheral. When the \texttt{Conductor} receives the ready signal from 
+		the \texttt{SD Controller}, the \texttt{Conductor} transfers control 
+		of the system to the \texttt{NIOS} so that software initialization can 
+		occur.  
 	\item Once the processor gets control, it reads in the first block, which
-		is a track table containing the block addresses of each song on the 
-		\texttt{SD
-		card}. This will allow skipping among tracks. The processor then
-		seeks to the first track, reads in the first block of audio data, and
-		then returns control to the \texttt{Conductor}.
+		is a track table containing the starting block address and title of 
+		each song on the \texttt{SD card}. The processor then seeks to the 
+		first track, reads in the first block of audio data, and then returns 
+		control to the \texttt{Conductor}.
 	\item The \texttt{Audio Buffer} operates on two blocks of memory in the 
-		block RAM.
-		At any given time, the \texttt{Audio Buffer} is reading data from one block
-		while data is being written to the other. The data being read is
-		pushed to the audio codec at the audio sampling rate. 
+		block RAM. At any given time, the \texttt{Audio Buffer} is reading 
+		data from one block while data is being written to the other. 
+		The data being read is pushed to the audio codec at the audio sampling rate. 
 		The next block of data is already written by the time the current audio 
 		data is finished being played. The buffer then reads from the newly 
 		completed block and new data is written over the old data that was 
 		read in the previous block.
 	\item The \texttt{FFT} takes the same blocks of data that the \texttt{Audio Buffer} 
-		uses
-		and performs a 256-point \texttt{FFT}. The \texttt{FFT} converts the 
-		time-domain data
-		to frequency-domain data and stores it in block RAM.  
+		uses and performs a 256-point \texttt{FFT}. The \texttt{FFT} converts 
+		the time-domain data to frequency-domain data and stores it in block RAM.  
 	\item The \texttt{Visualizer} peripheral is used to display the frequencies
 		calculated by the \texttt{FFT} visually. Since humans can only hear
 		certain frequencies, the \texttt{Visualizer} isolates and only displays
 		the frequencies detectable to the human ear, in this case the
 		first 32 frequencies of the 256 calculated by the \texttt{FFT}.  
 	\item When the \texttt{Audio Buffer} is done with one block, the 
-		\texttt{Conductor} triggers
-		the SD card to read in another block. On every fourth block read, the
-		\texttt{Conductor }triggers the \texttt{FFT} unit to recompute the frequency 
-		values.
-		When the \texttt{FFT} unit is done, the conductor triggers the visualizer to
-		refresh the display.
+		\texttt{Conductor} triggers the SD card to read in another block. 
+		On every fourth block read, the \texttt{Conductor} triggers the 
+		\texttt{FFT} unit to recompute the frequency values.
+		When the \texttt{FFT} unit is done, the conductor triggers the 
+		visualizer to refresh the display.
 \end{itemize}
 \section{Design Implementation}
 
