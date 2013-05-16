@@ -65,7 +65,7 @@ on a VGA display, similar to the visualization on classic music players. Our
 implementation uses hardware to handle audio output and frequency
 visualization, and software to handle user interaction and system
 initialization. The user can interact with the system using switches for color
-mixing and buttons for fast forward, rewind, and track selection.
+mixing and keyboard for fast forward, rewind, and track selection.
 
 \section{System Architecture}
 
@@ -332,18 +332,25 @@ not being drawn to the screen.
 This project was initially created using only hardware components. The NIOS 
 entity was added later in order to give the project additional functionality. 
 At startup, the software reads in the first block of data from the SD card. 
-This first block contains 32-bit numbers which are the block addresses of the 
-beginning of each song on the SD card. If there are fewer than 128 songs on the 
-SD card, the remaining words in the block will be set to 0. The last non-zero 
-word in the track table is the end of the last track. Once initialization is
+This first block is divided into 64 byte chunks. The first four bytes in each
+chunk is a 32-bit number which is the starting block address of that song.
+The next 60 bytes is a null-terminated string with the track title.
+The very last 64 byte chunk simply has the block address of the end of the
+last song. If there are fewer than 7 songs on the SD card, 
+the remaining bytes in the block will all be zero.  Once initialization is
 finished, the NIOS software hands control over the system to the hardware
 conductor. It then goes into a loop in which it polls the current block address
 and the state of the push buttons. If the current block address goes over the 
 first block address of the next track, the track number is updated internally
-as well as written to a set of seven-segment displays. If one of the track 
-switch buttons is pressed, the program takes control away from the conductor,
-changes the block address to the start of the new track, reads in that block,
-and then returns control to the conductor.
+as well as written to a set of seven-segment displays. The software also
+controls a framebuffer that is used to fill in the top part of the VGA display.
+It uses this framebuffer, along with the PS/2 keyboard, to provide a user interface.
+This interface shows the different track titles and allows you to select from 
+them using the keyboard. If a new track is selected using the keyboard controls, 
+the program takes control away from the conductor, changes the block address 
+to the start of the selected track, reads in that block, and then returns 
+control to the conductor.
+
 \begin{figure}[H]
   \centering
     \includegraphics[width=2in]{track_table_diagram}
