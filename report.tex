@@ -94,7 +94,9 @@ visualizations using an Altera DE2 Cyclone FPGA.
 		occur.  
 	\item Once the processor gets control, it reads in the first block, which
 		is a track table containing the starting block address and title of 
-		each song on the \texttt{SD card}. The processor then seeks to the 
+		each song on the \texttt{SD card}. The track table is drawn 
+		on the VGA display for user control, and sets up the selection and 
+		current track indicators. The processor then seeks to the 
 		first track, reads in the first block of audio data, and then returns 
 		control to the \texttt{Conductor}.
 	\item The \texttt{Audio Buffer} operates on two blocks of memory in the 
@@ -161,12 +163,13 @@ the response from the SD card.
 
 Support for standard filesystems is not implemented. However, there is support
 for multiple song files. SD cards are addressed as 512-byte blocks. As such,
-the first 512 bytes of the SD card is dedicated to metadata - it contains the
+the first 512 bytes of the SD card is dedicated to metadata; it contains the
 start addresses for each song on the SD card.
 
 The songs themselves are in 16-bit raw PCM format, written to the SD card end
 to end and aligned to 512 byte boundaries. The start addresses of each
-song, as discussed earlier, are contained in the metadata block.
+song, as discussed earlier, are contained in the metadata block. A script was developed, \texttt{mkauimg.py}, for converting audio files to the appropriate format to 
+be written to an SD card and is included in the appendix.
 
 \subsection{Audio Buffer}
 
@@ -296,7 +299,7 @@ block RAM.
 
 There are two main tasks that the vizualizer needs to accomplish.  
 The first is sequentially reading in the data produced by the FFT and the 
-other is displaying that data on the vga.  Originally all 256 different 
+other is displaying that data on the VGA.  Originally all 256 different 
 frequencies were being displayed however after initial designs the decision 
 made was to include data for the first 32 frequencies on the display since 
 these are the hearable frequencies.  The reading process requires two states, 
@@ -329,26 +332,28 @@ not being drawn to the screen.
 
 \subsection{Software User Interface}
 
-This project was initially created using only hardware components. The NIOS 
-entity was added later in order to give the project additional functionality. 
+This project was initially designed using only hardware components. The NIOS 
+entity was added later in order to give the system additional functionality. 
 At startup, the software reads in the first block of data from the SD card. 
 This first block is divided into 64 byte chunks. The first four bytes in each
 chunk is a 32-bit number which is the starting block address of that song.
-The next 60 bytes is a null-terminated string with the track title.
+The next 60 bytes are a null-terminated string with the track title.
 The very last 64 byte chunk simply has the block address of the end of the
 last song. If there are fewer than 7 songs on the SD card, 
 the remaining bytes in the block will all be zero.  Once initialization is
 finished, the NIOS software hands control over the system to the hardware
-conductor. It then goes into a loop in which it polls the current block address
-and the state of the push buttons. If the current block address goes over the 
+conductor. It then goes into a loop, during which it polls the current block address
+and the state of the FPGA push buttons. If the current block address goes over the 
 first block address of the next track, the track number is updated internally
 as well as written to a set of seven-segment displays. The software also
-controls a framebuffer that is used to fill in the top part of the VGA display.
-It uses this framebuffer, along with the PS/2 keyboard, to provide a user interface.
-This interface shows the different track titles and allows you to select from 
-them using the keyboard. If a new track is selected using the keyboard controls, 
-the program takes control away from the conductor, changes the block address 
-to the start of the selected track, reads in that block, and then returns 
+controls a frame-buffer used to fill in the top part of the VGA display.
+It uses this frame-buffer, along with the PS/2 keyboard, to provide a track-selection 
+user interface display. This interface shows the different track titles and allows you to 
+select from them using the keyboard. Keyboard-controlled operations are navigating
+through available songs using the \texttt{j} and \texttt{k} keys in conjunction with the \texttt{Enter} key, skipping forward and backwards through the available tracks using \texttt{n} and \texttt{p}, fast-forward and rewinding using \texttt{f} and \texttt{b}, and pausing and resuming playback using the spacebar. 
+ If a new track is selected using the keyboard 
+controls, the program takes control away from the conductor, changes the block 
+address to the start of the selected track, reads in that block, and then returns 
 control to the conductor.
 
 \begin{figure}[H]
@@ -426,7 +431,7 @@ instead.
 \subsection{Adding Software Control}
 
 Initially, our design was implemented entirely in hardware, as we found our control 
-scheme wasn�t complex enough to require software. However, in order to satisfy the 
+scheme wasn't complex enough to require software. However, in order to satisfy the 
 requirements for the class, we had to add a software component. We decided to use 
 software to coordinate the initialization of our system, as well as track switching, and 
 have the hardware controller (the conductor) take over when the audio is actually 
@@ -437,12 +442,13 @@ playing.
 After connecting the FFT and visualizer units together, we determined the visualizer 
 would be more aesthetically pleasing if we isolated and displayed only the 
 frequencies detectable to the human ear, in this case the first 32 frequencies of the 
-256 calculated by the FFT.  Another aesthetic change made was to provide the user 
-with the capability of changing the color of the visualization.
+256 calculated by the FFT.  Another aesthetic change made was to provide the user
+with a color "channel mixer" via switches on the FPGA board, so the user can
+interactively adjust the color of the visualization. 
 
 \section{Testing Methodology}
 
-Testing proved to be helpful in isolating and fixing bugs before introducing
+Testing proved to be invaluable in isolating and fixing bugs before integrating
 modules into the system. For computational units and controllers, testing was
 done through simulations and assertions; for peripherals, testing was done by
 using test drivers and observing the peripherals behavior. The following
@@ -470,7 +476,7 @@ we observed the changes on the VGA monitor.
 
 The audio buffer needed to produce a clean sound with no crackling. We tested
 this by writing in a sine wave and listening to the output. Additionally, a
-simulation testbench was used to ensure that swapping between the two buffers
+simulation test-bench was used to ensure that swapping between the two buffers
 was properly synchronized.
 
 \subsection{SD Card Controller}
@@ -484,7 +490,7 @@ where commands have failed.
 \subsection{Conductor}
 
 The conductor is the glue that holds all the components together. We emulated
-the system components in a testbench and simulated the signals they would
+the system components in a test-bench and simulated the signals they would
 output. Using assertions, we confirmed that the conductor was correctly timing
 the interactions between components.
 
@@ -558,8 +564,8 @@ Deadline&May 15&System complete and presentation finished.&\textit{Completed.}\\
 Interfacing to external hardware, such as the SD card, audio codec, and VGA display, 
 was by far the most challenging parts of the assignment, mainly because it was
 difficult to debug. Since proper functionality depended on what the external hardware 
-was doing, we couldn't reliably use Quartus testbenches like we did for the rest of the 
-components, since our testbenches couldn't exactly replicate the behavior of the 
+was doing, we couldn't reliably use Quartus test-benches like we did for the rest of the 
+components, since our test-benches couldn't exactly replicate the behavior of the 
 external hardware. We found that the best way to get interfaces to external hardware 
 working was to base our implementation off of successful existing implementations. 
 For instance, for the audio buffer, we used the components provided for Lab 3 to 
@@ -682,15 +688,15 @@ more improvements and new features that could be implemented:
 	filesystem instead of having to use custom tools for converting the data and 
 	writing it to the block device.
 	\item A few areas of our code still contain sub-optimal hardware
-	implementations (for instance, if-loops which may have been better written
-	as state diagrams). Cleaning up our hardware implementation for a more
-	optimized use of logical elements is critical for future work with this system.
+	implementations (for instance, long if-else statements which may have been 
+	better written
+	as state diagrams). Cleaning up our hardware implementation for a \textbf{more
+	optimized use of logical elements} is critical for future work with this system.
 \end{enumerate}
 
 \subsection{Acknowledgements}
-The team would like to thank Professor Stephen Edwards our TA Stephen Pratt for
-all their guidance and support in our Embedded Systems journey. Also,
-additional thanks go out to Luis Pe\~{n}a, for being cool, man.
+The team would like to thank Professor Stephen Edwards and our TA Stephen Pratt 
+for all their guidance and support in our Embedded Systems journey. Additional thanks go out to Luis Pe\~{n}a, for being cool, man.
 
 \newpage
 \appendix
